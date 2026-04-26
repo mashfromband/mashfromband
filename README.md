@@ -97,21 +97,6 @@ RAG / LLM application foundations
 
 </div>
 
----
-
-## GitHub Analytics
-
-<div align="center">
-
-<img height="180" src="https://github-readme-stats.vercel.app/api/top-langs/?username=mashfromband&layout=compact&theme=tokyonight&hide_border=true&langs_count=8" alt="Top languages" />
-<img height="180" src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=mashfromband&theme=tokyonight" alt="Profile summary" />
-
-![Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=mashfromband&theme=tokyo-night&hide_border=true&area=true)
-
-</div>
-
----
-
 ## Private Contribution Signals
 
 Public GitHub cards cannot read every private contribution, so this section is generated from a private token and published as aggregate-only data across accessible repositories. It includes streaks, total contributions, reviews, pull requests, and repository activity without exposing repository names, URLs, issue titles, or commit messages.
