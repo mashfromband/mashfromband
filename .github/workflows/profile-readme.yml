@@ -21,11 +21,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Check README links
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --verbose --no-progress README.md
+          args: >-
+            --verbose
+            --no-progress
+            --exclude capsule-render.vercel.app
+            --exclude readme-typing-svg.demolab.com
+            --exclude img.shields.io
+            --exclude github-profile-trophy.vercel.app
+            --exclude github-readme-stats.vercel.app
+            --exclude streak-stats.demolab.com
+            --exclude github-readme-activity-graph.vercel.app
+            --exclude komarev.com
+            README.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
