@@ -1,16 +1,16 @@
 # Private Contribution Stats
 
-This profile repository can publish aggregate-only contribution activity in `assets/private-contributions.svg`.
+This profile repository can publish aggregate-only activity across accessible repositories in `assets/private-contributions.svg`.
 
 ## Privacy Model
 
 The generated SVG may publish:
 
-- Total contributions over the last year
-- Current contribution streak
-- Longest contribution streak
-- Active contribution days
-- Commit, pull request, and review contribution totals
+- Total activity over the last year
+- Current activity streak
+- Longest activity streak
+- Active activity days
+- Commit, authored pull request, authored issue, and reviewed pull request totals
 - Total accessible repository count
 - Private and public repository counts
 - Active repository counts for recent time windows
@@ -39,8 +39,21 @@ Recommended token type:
 - Permissions:
   - Metadata: read
   - Contents: read
+  - Issues: read
+  - Pull requests: read
 
 Classic tokens also work with `repo` scope, but fine-grained tokens are preferred.
+
+## Counting Model
+
+The script does not rely on GitHub's profile contribution calendar. Instead, it scans accessible repositories and GitHub search results to count:
+
+- Commits authored by `mashfromband`
+- Pull requests authored by `mashfromband`
+- Issues authored by `mashfromband`
+- Pull requests reviewed by `mashfromband`
+
+This is intended to represent practical work across public and private repositories more accurately than public profile cards.
 
 ## Updating Stats
 

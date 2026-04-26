@@ -97,9 +97,9 @@ RAG / LLM application foundations
 
 </div>
 
-## Private Contribution Signals
+## All Activity Signals
 
-Public GitHub cards cannot read every private contribution, so this section is generated from a private token and published as aggregate-only data across accessible repositories. It includes streaks, total contributions, reviews, pull requests, and repository activity without exposing repository names, URLs, issue titles, or commit messages.
+Public GitHub cards cannot read every private repository activity, so this section is generated from a private token and published as aggregate-only data across accessible repositories. It includes streaks, total activity, commits, issues, reviewed pull requests, authored pull requests, and repository activity without exposing repository names, URLs, issue titles, or commit messages.
 
 <div align="center">
 
