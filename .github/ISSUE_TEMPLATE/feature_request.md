@@ -3,7 +3,7 @@ name: Feature request
 about: Suggest an improvement to the profile README or repository workflow
 title: "feat: "
 labels: enhancement
-assignees: makhmeto
+assignees: mashfromband
 ---
 
 ## Summary

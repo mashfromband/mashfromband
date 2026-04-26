@@ -6,7 +6,7 @@
 
 [![Website](https://img.shields.io/badge/BM1314-111827?style=for-the-badge&logo=vercel&logoColor=white)](https://www.bm1314.net/)
 [![GoDD](https://img.shields.io/badge/GoDD-getgodd.dev-7C3AED?style=for-the-badge&logo=rocket&logoColor=white)](https://www.getgodd.dev/)
-[![GitHub](https://img.shields.io/badge/GitHub-makhmeto-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/makhmeto)
+[![GitHub](https://img.shields.io/badge/GitHub-mashfromband-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/mashfromband)
 
 </div>
 
@@ -78,14 +78,14 @@ RAG / LLM application foundations
 
 <div align="center">
 
-![GitHub Trophy](https://github-profile-trophy.vercel.app/?username=makhmeto&theme=tokyonight&no-frame=true&no-bg=true&margin-w=8&row=1&column=6)
+![GitHub Trophy](https://github-profile-trophy.vercel.app/?username=mashfromband&theme=tokyonight&no-frame=true&no-bg=true&margin-w=8&row=1&column=6)
 
-<img height="180" src="https://github-readme-stats.vercel.app/api?username=makhmeto&show_icons=true&theme=tokyonight&hide_border=true&rank_icon=github&include_all_commits=true" alt="GitHub stats" />
-<img height="180" src="https://github-readme-stats.vercel.app/api/top-langs/?username=makhmeto&layout=compact&theme=tokyonight&hide_border=true&langs_count=8" alt="Top languages" />
+<img height="180" src="https://github-readme-stats.vercel.app/api?username=mashfromband&show_icons=true&theme=tokyonight&hide_border=true&rank_icon=github&include_all_commits=true" alt="GitHub stats" />
+<img height="180" src="https://github-readme-stats.vercel.app/api/top-langs/?username=mashfromband&layout=compact&theme=tokyonight&hide_border=true&langs_count=8" alt="Top languages" />
 
-![GitHub Streak](https://streak-stats.demolab.com?user=makhmeto&theme=tokyonight&hide_border=true)
+![GitHub Streak](https://streak-stats.demolab.com?user=mashfromband&theme=tokyonight&hide_border=true)
 
-![Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=makhmeto&theme=tokyo-night&hide_border=true&area=true)
+![Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=mashfromband&theme=tokyo-night&hide_border=true&area=true)
 
 </div>
 
@@ -114,6 +114,6 @@ RAG / LLM application foundations
 
 ### Let's build faster systems with stronger guarantees.
 
-![Profile Views](https://komarev.com/ghpvc/?username=makhmeto&style=for-the-badge&color=8B5CF6)
+![Profile Views](https://komarev.com/ghpvc/?username=mashfromband&style=for-the-badge&color=8B5CF6)
 
 </div>

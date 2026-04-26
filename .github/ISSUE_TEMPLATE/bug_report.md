@@ -3,7 +3,7 @@ name: Bug report
 about: Report a problem with the profile README or repository setup
 title: "fix: "
 labels: bug
-assignees: makhmeto
+assignees: mashfromband
 ---
 
 ## Summary
