@@ -8,13 +8,17 @@
 [![GoDD](https://img.shields.io/badge/GoDD-getgodd.dev-7C3AED?style=for-the-badge&logo=rocket&logoColor=white)](https://www.getgodd.dev/)
 [![GitHub](https://img.shields.io/badge/GitHub-mashfromband-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/mashfromband)
 
+[![日本語](https://img.shields.io/badge/日本語-0EA5E9?style=for-the-badge)](#日本語)
+[![English](https://img.shields.io/badge/English-8B5CF6?style=for-the-badge)](#english)
+[![Русский](https://img.shields.io/badge/Русский-F97316?style=for-the-badge)](#русский)
+
 </div>
 
 ---
 
 ## Hey, I'm Makhmeto
 
-AI ネイティブな開発プロセス、フルスタック SaaS、DX/AX 自動化を中心に、企画から実装・品質ゲート・運用までを高速に回すプロダクトビルダーです。
+AI ネイティブな開発プロセス、フルスタック SaaS、DX/AX 自動化を中心に、企画から実装・品質ゲート・運用までを高速に回すプロダクトビルダーです。日本語・英語・ロシア語のトリリンガルとして、国内外のチーム、顧客、AI エージェントをつなぐ開発コミュニケーションを得意にしています。
 
 現在は **GoDD (Governance-orchestrated Driven Development)** を軸に、人間と AI エージェントが協調して開発するためのワークフロー、品質保証、仕様駆動の開発体験を磨いています。
 
@@ -22,11 +26,33 @@ AI ネイティブな開発プロセス、フルスタック SaaS、DX/AX 自動
 
 ## Featured Work
 
-| Project | What it is | Focus |
+| Project / Organization | What it is | Focus |
 | --- | --- | --- |
-| [**GoDD**](https://www.getgodd.dev/) | AI 駆動開発を統治・品質ゲート・仕様駆動で運用する開発フレームワーク | AI agents, DX/AX, quality gates, delivery automation |
-| [**BM1314**](https://www.bm1314.net/) | 3D 体験を含む Web プロジェクト | Interactive web, product experience, visual UI |
+| [**AutoDevJapan / GoDD**](https://www.getgodd.dev/) | Governance-orchestrated Driven Development を軸に、AI ネイティブな開発・品質ゲート・納品プロセスを設計 | AI agents, DX/AX, quality gates, delivery automation |
+| [**BM1314**](https://www.bm1314.net/) | 3D 体験を含む Web プロジェクトと、業務アプリ / SaaS / Web 機能のビルダー群を展開 | Interactive web, builder systems, product experience |
+| [**NewTuber**](https://github.com/NewTuber-YouTubeAutomationTool) | YouTube 動画の取得・自動アップロードに関する自動化ツール領域 | Creator automation, media workflow, tooling |
+| [**RealizeLearning**](https://github.com/RealizeLearning) | 学習・教育領域のプロダクト開発 Organization | EdTech, learning experience, product delivery |
+| [**NewStage-CRMC**](https://github.com/NewStage-CRMC) | CRM / 顧客管理領域の開発 Organization | CRM, business operations, internal tooling |
+| [**GovNoa**](https://github.com/GovNoa) | ガバナンス、業務設計、AI 活用を中心にした実験・開発 Organization | Governance, AI operations, workflow design |
 | **AI workflow experiments** | ComfyUI などを含む生成 AI / 自動化ワークフローの検証 | Generative AI, workflow design, tooling |
+
+---
+
+## Trilingual Communication
+
+GitHub README cannot run JavaScript, so the language "buttons" above jump to each language block instead of toggling the page dynamically.
+
+### 日本語
+
+仕様整理、顧客折衝、開発チームとの調整、AI エージェント運用まで、日本語での要件定義から実装完了までを一気通貫で進めます。
+
+### English
+
+I build AI-native product workflows, full-stack SaaS systems, and delivery processes that connect product intent, engineering execution, and quality gates.
+
+### Русский
+
+Я использую русский язык для коммуникации в международных командах, уточнения требований и сопровождения AI-native разработки от идеи до поставки.
 
 ---
 
@@ -78,10 +104,8 @@ RAG / LLM application foundations
 
 <div align="center">
 
-![GitHub Trophy](https://github-profile-trophy.vercel.app/?username=mashfromband&theme=tokyonight&no-frame=true&no-bg=true&margin-w=8&row=1&column=6)
-
-<img height="180" src="https://github-readme-stats.vercel.app/api?username=mashfromband&show_icons=true&theme=tokyonight&hide_border=true&rank_icon=github&include_all_commits=true" alt="GitHub stats" />
 <img height="180" src="https://github-readme-stats.vercel.app/api/top-langs/?username=mashfromband&layout=compact&theme=tokyonight&hide_border=true&langs_count=8" alt="Top languages" />
+<img height="180" src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=mashfromband&theme=tokyonight" alt="Profile summary" />
 
 ![GitHub Streak](https://streak-stats.demolab.com?user=mashfromband&theme=tokyonight&hide_border=true)
 
