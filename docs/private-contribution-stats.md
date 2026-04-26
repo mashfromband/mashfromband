@@ -1,21 +1,27 @@
 # Private Contribution Stats
 
-This profile repository can publish aggregate-only private repository activity in `assets/private-contributions.svg`.
+This profile repository can publish aggregate-only contribution activity in `assets/private-contributions.svg`.
 
 ## Privacy Model
 
 The generated SVG may publish:
 
-- Total accessible private repository count
-- Active private repository counts for recent time windows
+- Total contributions over the last year
+- Current contribution streak
+- Longest contribution streak
+- Active contribution days
+- Commit, pull request, and review contribution totals
+- Total accessible repository count
+- Private and public repository counts
+- Active repository counts for recent time windows
 - Count of organization-owned private workspaces
 - Top primary languages by count
-- Latest private repository activity date
+- Latest repository activity date
 
 The generated SVG must not publish:
 
-- Private repository names
-- Private repository URLs
+- Repository names
+- Repository URLs
 - Organization names derived only from private access
 - Issue titles
 - Pull request titles
@@ -29,7 +35,7 @@ Recommended token type:
 
 - Fine-grained personal access token
 - Read-only access
-- Repository access limited to the private repositories that should be counted
+- Repository access limited to the repositories that should be counted
 - Permissions:
   - Metadata: read
   - Contents: read
