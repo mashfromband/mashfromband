@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Generate aggregate-only private contribution stats for the profile README.
+"""Generate aggregate-only contribution stats for the profile README.
 
 The generated SVG intentionally avoids repository names, repository URLs, commit
 messages, issue titles, and organization names. It is safe to publish because it
-only contains aggregate counts derived from repositories the token can read.
+only contains aggregate counts derived from contribution and repository metadata
+the token can read.
 """
 
 from __future__ import annotations
@@ -22,11 +23,12 @@ from urllib.request import Request, urlopen
 
 
 API_ROOT = "https://api.github.com"
+GRAPHQL_ROOT = "https://api.github.com/graphql"
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate a public-safe SVG from private GitHub repository aggregates."
+        description="Generate a public-safe SVG from aggregate GitHub contribution data."
     )
     parser.add_argument("--output", default="assets/private-contributions.svg")
     parser.add_argument("--username", default=os.getenv("GITHUB_ACTOR", "mashfromband"))
@@ -53,6 +55,30 @@ def request_json(url: str, token: str) -> tuple[Any, dict[str, str]]:
         raise RuntimeError(f"GitHub API request failed: {error.code} {detail}") from error
 
 
+def request_graphql(query: str, variables: dict[str, Any], token: str) -> dict[str, Any]:
+    request = Request(
+        GRAPHQL_ROOT,
+        data=json.dumps({"query": query, "variables": variables}).encode("utf-8"),
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "User-Agent": "mashfromband-profile-private-stats",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=30) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except HTTPError as error:
+        detail = error.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"GitHub GraphQL request failed: {error.code} {detail}") from error
+
+    if payload.get("errors"):
+        raise RuntimeError(f"GitHub GraphQL returned errors: {payload['errors']}")
+    return payload["data"]
+
+
 def parse_link_header(value: str | None) -> dict[str, str]:
     links: dict[str, str] = {}
     if not value:
@@ -69,10 +95,10 @@ def parse_link_header(value: str | None) -> dict[str, str]:
     return links
 
 
-def fetch_private_repositories(token: str) -> list[dict[str, Any]]:
+def fetch_accessible_repositories(token: str) -> list[dict[str, Any]]:
     params = urlencode(
         {
-            "visibility": "private",
+            "visibility": "all",
             "affiliation": "owner,collaborator,organization_member",
             "per_page": "100",
             "sort": "updated",
@@ -86,10 +112,49 @@ def fetch_private_repositories(token: str) -> list[dict[str, Any]]:
         payload, headers = request_json(url, token)
         if not isinstance(payload, list):
             raise RuntimeError("Unexpected GitHub API response for /user/repos")
-        repositories.extend(repo for repo in payload if repo.get("private") is True)
+        repositories.extend(payload)
         url = parse_link_header(headers.get("link")).get("next", "")
 
     return repositories
+
+
+def fetch_contribution_calendar(token: str, username: str) -> dict[str, Any]:
+    to_date = datetime.now(UTC)
+    from_date = to_date - timedelta(days=365)
+    data = request_graphql(
+        """
+        query($login: String!, $from: DateTime!, $to: DateTime!) {
+          user(login: $login) {
+            contributionsCollection(from: $from, to: $to) {
+              contributionCalendar {
+                totalContributions
+                weeks {
+                  contributionDays {
+                    date
+                    contributionCount
+                  }
+                }
+              }
+              restrictedContributionsCount
+              totalCommitContributions
+              totalIssueContributions
+              totalPullRequestContributions
+              totalPullRequestReviewContributions
+            }
+          }
+        }
+        """,
+        {
+            "login": username,
+            "from": from_date.isoformat(),
+            "to": to_date.isoformat(),
+        },
+        token,
+    )
+    user = data.get("user")
+    if not user:
+        raise RuntimeError(f"GitHub user not found: {username}")
+    return user["contributionsCollection"]
 
 
 def parse_github_datetime(value: str | None) -> datetime | None:
@@ -98,7 +163,40 @@ def parse_github_datetime(value: str | None) -> datetime | None:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def summarize(repositories: list[dict[str, Any]]) -> dict[str, str]:
+def calculate_streaks(days: list[dict[str, Any]]) -> dict[str, int]:
+    parsed_days = [
+        (datetime.strptime(day["date"], "%Y-%m-%d").date(), int(day["contributionCount"]))
+        for day in days
+    ]
+    parsed_days.sort(key=lambda item: item[0])
+
+    longest = 0
+    running = 0
+    for _, count in parsed_days:
+        if count > 0:
+            running += 1
+            longest = max(longest, running)
+        else:
+            running = 0
+
+    current = 0
+    relevant_days = parsed_days
+    if parsed_days and parsed_days[-1][1] == 0:
+        # GitHub cards commonly keep an active streak alive until yesterday when
+        # today's contribution count is still zero.
+        relevant_days = parsed_days[:-1]
+    for _, count in reversed(relevant_days):
+        if count <= 0:
+            break
+        current += 1
+
+    active_days = sum(1 for _, count in parsed_days if count > 0)
+    return {"current": current, "longest": longest, "active_days": active_days}
+
+
+def summarize(
+    repositories: list[dict[str, Any]], contributions: dict[str, Any] | None
+) -> dict[str, str]:
     now = datetime.now(UTC)
     updated_dates = [
         parsed
@@ -106,6 +204,8 @@ def summarize(repositories: list[dict[str, Any]]) -> dict[str, str]:
         if parsed is not None
     ]
     language_counts = Counter(repo.get("language") or "Other" for repo in repositories)
+    private_count = sum(1 for repo in repositories if repo.get("private") is True)
+    public_count = sum(1 for repo in repositories if repo.get("private") is False)
     organization_count = len(
         {
             repo.get("owner", {}).get("login")
@@ -120,12 +220,30 @@ def summarize(repositories: list[dict[str, Any]]) -> dict[str, str]:
         f"{language} x{count}" for language, count in language_counts.most_common(4)
     )
 
+    calendar = (contributions or {}).get("contributionCalendar", {})
+    days = [
+        day
+        for week in calendar.get("weeks", [])
+        for day in week.get("contributionDays", [])
+    ]
+    streaks = calculate_streaks(days) if days else {"current": 0, "longest": 0, "active_days": 0}
+
     return {
-        "private_repos": str(len(repositories)),
+        "total_contributions": str(calendar.get("totalContributions", 0)),
+        "current_streak": str(streaks["current"]),
+        "longest_streak": str(streaks["longest"]),
+        "active_days": str(streaks["active_days"]),
+        "commit_contributions": str((contributions or {}).get("totalCommitContributions", 0)),
+        "pull_requests": str((contributions or {}).get("totalPullRequestContributions", 0)),
+        "reviews": str((contributions or {}).get("totalPullRequestReviewContributions", 0)),
+        "restricted_contributions": str((contributions or {}).get("restrictedContributionsCount", 0)),
+        "accessible_repos": str(len(repositories)),
+        "private_repos": str(private_count),
+        "public_repos": str(public_count),
         "active_90": str(active_90),
         "active_365": str(active_365),
         "organization_count": str(organization_count),
-        "top_languages": top_languages or "No private languages detected",
+        "top_languages": top_languages or "No languages detected",
         "latest_update": max(updated_dates).strftime("%Y-%m-%d") if updated_dates else "N/A",
         "generated_at": now.strftime("%Y-%m-%d"),
     }
@@ -138,36 +256,53 @@ def text(value: str) -> str:
 def render_svg(summary: dict[str, str], *, username: str, configured: bool) -> str:
     if not configured:
         summary = {
+            "total_contributions": "Setup",
+            "current_streak": "Needed",
+            "longest_streak": "Needed",
+            "active_days": "Needed",
+            "commit_contributions": "Needed",
+            "pull_requests": "Needed",
+            "reviews": "Needed",
+            "restricted_contributions": "Needed",
+            "accessible_repos": "Setup",
             "private_repos": "Setup",
+            "public_repos": "Setup",
             "active_90": "Needed",
             "active_365": "Needed",
             "organization_count": "Needed",
-            "top_languages": "Add PROFILE_STATS_TOKEN to generate private contribution aggregates",
+            "top_languages": "Add PROFILE_STATS_TOKEN to generate aggregate contribution signals",
             "latest_update": "N/A",
             "generated_at": datetime.now(UTC).strftime("%Y-%m-%d"),
         }
 
     cards = [
-        ("Private repos", summary["private_repos"]),
-        ("Active in 90 days", summary["active_90"]),
-        ("Active in 365 days", summary["active_365"]),
-        ("Org workspaces", summary["organization_count"]),
+        ("Total", summary["total_contributions"]),
+        ("Current streak", f'{summary["current_streak"]}d'),
+        ("Longest streak", f'{summary["longest_streak"]}d'),
+        ("Active days", summary["active_days"]),
+        ("Commits", summary["commit_contributions"]),
+        ("Pull requests", summary["pull_requests"]),
+        ("Reviews", summary["reviews"]),
+        ("Repos touched", summary["accessible_repos"]),
     ]
     card_svg = []
     for index, (label, value) in enumerate(cards):
-        x = 28 + index * 191
+        row = index // 4
+        column = index % 4
+        x = 28 + column * 191
+        y = 86 + row * 92
         card_svg.append(
             f"""
   <g>
-    <rect x="{x}" y="86" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
-    <text x="{x + 18}" y="120" fill="#94a3b8" font-size="13">{text(label)}</text>
-    <text x="{x + 18}" y="148" fill="#f8fafc" font-size="28" font-weight="700">{text(value)}</text>
+    <rect x="{x}" y="{y}" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
+    <text x="{x + 18}" y="{y + 34}" fill="#94a3b8" font-size="13">{text(label)}</text>
+    <text x="{x + 18}" y="{y + 62}" fill="#f8fafc" font-size="28" font-weight="700">{text(value)}</text>
   </g>"""
         )
 
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="820" height="260" viewBox="0 0 820 260" role="img" aria-labelledby="title desc">
-  <title id="title">Private contribution aggregate stats for {text(username)}</title>
-  <desc id="desc">Aggregate-only private repository activity. Repository names and URLs are not included.</desc>
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="820" height="368" viewBox="0 0 820 368" role="img" aria-labelledby="title desc">
+  <title id="title">Aggregate contribution stats for {text(username)}</title>
+  <desc id="desc">Aggregate contribution and repository activity. Repository names and URLs are not included.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#020617"/>
@@ -180,12 +315,13 @@ def render_svg(summary: dict[str, str], *, username: str, configured: bool) -> s
       <stop offset="100%" stop-color="#f97316"/>
     </linearGradient>
   </defs>
-  <rect width="820" height="260" rx="24" fill="url(#bg)"/>
-  <rect x="1" y="1" width="818" height="258" rx="23" fill="none" stroke="#334155"/>
+  <rect width="820" height="368" rx="24" fill="url(#bg)"/>
+  <rect x="1" y="1" width="818" height="366" rx="23" fill="none" stroke="#334155"/>
   <rect x="28" y="30" width="186" height="8" rx="4" fill="url(#accent)"/>
-  <text x="28" y="66" fill="#f8fafc" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="26" font-weight="700">Private Work Signals</text>
-  <text x="28" y="212" fill="#cbd5e1" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="14">Top private stack: {text(summary["top_languages"])}</text>
-  <text x="28" y="236" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">Aggregate only. No private repository names, URLs, issue titles, or commit messages are published. Latest private activity: {text(summary["latest_update"])}. Generated: {text(summary["generated_at"])}.</text>
+  <text x="28" y="66" fill="#f8fafc" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="26" font-weight="700">Contribution Signals</text>
+  <text x="28" y="292" fill="#cbd5e1" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="14">Accessible repos: {text(summary["accessible_repos"])} total / {text(summary["private_repos"])} private / {text(summary["public_repos"])} public / {text(summary["organization_count"])} org workspaces</text>
+  <text x="28" y="316" fill="#cbd5e1" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="14">Top stack across accessible repos: {text(summary["top_languages"])}</text>
+  <text x="28" y="342" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">Aggregate only. No repository names, URLs, issue titles, or commit messages are published. Latest repo activity: {text(summary["latest_update"])}. Generated: {text(summary["generated_at"])}.</text>
   {''.join(card_svg)}
 </svg>
 """
@@ -196,8 +332,9 @@ def main() -> None:
     token = os.getenv("PROFILE_STATS_TOKEN") or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
     configured = bool(token)
 
-    repositories = fetch_private_repositories(token) if token else []
-    summary = summarize(repositories)
+    repositories = fetch_accessible_repositories(token) if token else []
+    contributions = fetch_contribution_calendar(token, args.username) if token else None
+    summary = summarize(repositories, contributions)
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
