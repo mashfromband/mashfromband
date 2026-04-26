@@ -114,6 +114,18 @@ RAG / LLM application foundations
 
 ---
 
+## Private Contribution Signals
+
+Public GitHub cards cannot read private repositories, so this section is generated from a private token and published as aggregate-only data. It does not expose private repository names, URLs, issue titles, or commit messages.
+
+<div align="center">
+
+![Private contribution aggregate stats](assets/private-contributions.svg)
+
+</div>
+
+---
+
 ## Operating Principles
 
 - **Spec is the source of truth**: requirements, acceptance criteria, and implementation stay aligned.
