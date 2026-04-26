@@ -32,7 +32,6 @@ AI ネイティブな開発プロセス、フルスタック SaaS、DX/AX 自動
 | [**BM1314**](https://www.bm1314.net/) | 3D 体験を含む Web プロジェクトと、業務アプリ / SaaS / Web 機能のビルダー群を展開 | Interactive web, builder systems, product experience |
 | [**NewTuber**](https://github.com/NewTuber-YouTubeAutomationTool) | YouTube 動画の取得・自動アップロードに関する自動化ツール領域 | Creator automation, media workflow, tooling |
 | [**RealizeLearning**](https://github.com/RealizeLearning) | 学習・教育領域のプロダクト開発 Organization | EdTech, learning experience, product delivery |
-| [**NewStage-CRMC**](https://github.com/NewStage-CRMC) | CRM / 顧客管理領域の開発 Organization | CRM, business operations, internal tooling |
 | [**GovNoa**](https://github.com/GovNoa) | ガバナンス、業務設計、AI 活用を中心にした実験・開発 Organization | Governance, AI operations, workflow design |
 | **AI workflow experiments** | ComfyUI などを含む生成 AI / 自動化ワークフローの検証 | Generative AI, workflow design, tooling |
 
