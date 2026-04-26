@@ -32,8 +32,8 @@ jobs:
             --exclude capsule-render.vercel.app
             --exclude readme-typing-svg.demolab.com
             --exclude img.shields.io
-            --exclude github-profile-trophy.vercel.app
             --exclude github-readme-stats.vercel.app
+            --exclude github-profile-summary-cards.vercel.app
             --exclude streak-stats.demolab.com
             --exclude github-readme-activity-graph.vercel.app
             --exclude komarev.com
