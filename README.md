@@ -106,8 +106,6 @@ RAG / LLM application foundations
 <img height="180" src="https://github-readme-stats.vercel.app/api/top-langs/?username=mashfromband&layout=compact&theme=tokyonight&hide_border=true&langs_count=8" alt="Top languages" />
 <img height="180" src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=mashfromband&theme=tokyonight" alt="Profile summary" />
 
-![GitHub Streak](https://streak-stats.demolab.com?user=mashfromband&theme=tokyonight&hide_border=true)
-
 ![Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=mashfromband&theme=tokyo-night&hide_border=true&area=true)
 
 </div>
@@ -116,7 +114,7 @@ RAG / LLM application foundations
 
 ## Private Contribution Signals
 
-Public GitHub cards cannot read private repositories, so this section is generated from a private token and published as aggregate-only data. It does not expose private repository names, URLs, issue titles, or commit messages.
+Public GitHub cards cannot read every private contribution, so this section is generated from a private token and published as aggregate-only data across accessible repositories. It includes streaks, total contributions, reviews, pull requests, and repository activity without exposing repository names, URLs, issue titles, or commit messages.
 
 <div align="center">
 
