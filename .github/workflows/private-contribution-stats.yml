@@ -1,8 +1,9 @@
-name: Private Contribution Stats
+name: All Activity Signals
 
 on:
   workflow_dispatch:
   schedule:
+    # Daily keeps the profile current while staying lightweight for a public profile repository.
     - cron: "17 3 * * *"
 
 permissions:
@@ -14,7 +15,7 @@ env:
 
 jobs:
   generate:
-    name: Generate aggregate private stats
+    name: Generate aggregate activity stats
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,19 +33,20 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Generate private contribution SVG
+      - name: Generate activity signals SVG
         run: python scripts/generate_private_contribution_stats.py --output assets/private-contributions.svg --username mashfromband
 
       - name: Create update pull request
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: automation/private-contribution-stats
-          title: "chore: update private contribution stats"
-          commit-message: "chore: update private contribution stats"
+          branch: automation/all-activity-signals
+          title: "chore: update all activity signals"
+          commit-message: "chore: update all activity signals"
           body: |
             ## Summary
 
-            - Regenerate aggregate-only private contribution stats for the profile README.
+            - Regenerate aggregate-only activity signals for the profile README.
+            - Runs daily to keep the profile current without publishing private repository details.
 
             ## Privacy
 

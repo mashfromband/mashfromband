@@ -7,9 +7,6 @@ This profile repository can publish aggregate-only activity across accessible re
 The generated SVG may publish:
 
 - Total activity over the last year
-- Current activity streak
-- Longest activity streak
-- Active activity days
 - Commit, authored pull request, authored issue, and reviewed pull request totals
 - Total accessible repository count
 - Private and public repository counts
@@ -57,6 +54,6 @@ This is intended to represent practical work across public and private repositor
 
 ## Updating Stats
 
-The `Private Contribution Stats` workflow runs on a daily schedule and can also be run manually.
+The `All Activity Signals` workflow runs once per day and can also be run manually. A daily run keeps the profile fresh while staying comfortably within normal GitHub Actions usage for a public profile repository.
 
 When the generated SVG changes, the workflow opens a pull request instead of pushing directly to `main`.
