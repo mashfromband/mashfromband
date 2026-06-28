@@ -1,18 +1,13 @@
 name: Tests
 
 on:
+  # Run on every pull request and push to main (no path filter) so this check
+  # always reports a status and can serve as a required status check without
+  # deadlocking PRs that do not touch scripts/ or tests/.
   pull_request:
-    paths:
-      - "scripts/**"
-      - "tests/**"
-      - ".github/workflows/tests.yml"
   push:
     branches:
       - main
-    paths:
-      - "scripts/**"
-      - "tests/**"
-      - ".github/workflows/tests.yml"
 
 permissions:
   contents: read

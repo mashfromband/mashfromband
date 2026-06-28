@@ -87,8 +87,8 @@ library unit tests (no extra dependencies):
 python -m unittest discover -s tests
 ```
 
-The `Tests` workflow runs this suite on every pull request and on pushes to
-`main` that touch `scripts/`, `tests/`, or the workflow itself.
+The `Tests` workflow runs this suite on every pull request and on every push to
+`main`, and is configured as a required status check before merge.
 
 ## Updating Stats
 
