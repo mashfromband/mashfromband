@@ -1,0 +1,29 @@
+name: Tests
+
+on:
+  # Run on every pull request and push to main (no path filter) so this check
+  # always reports a status and can serve as a required status check without
+  # deadlocking PRs that do not touch scripts/ or tests/.
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Python unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests

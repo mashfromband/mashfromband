@@ -21,22 +21,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Validate token
+      - name: Check token configuration
         if: ${{ env.PROFILE_STATS_TOKEN == '' }}
         run: |
-          echo "PROFILE_STATS_TOKEN is required to read private repository aggregates."
+          echo "::warning title=PROFILE_STATS_TOKEN is not configured::Skipping aggregate activity refresh because private repository aggregates require a fine-grained token."
           echo "Create a fine-grained token with read-only metadata and contents access for the repositories you want counted."
-          exit 1
 
       - name: Set up Python
+        if: ${{ env.PROFILE_STATS_TOKEN != '' }}
         uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 
       - name: Generate activity signals SVG
+        if: ${{ env.PROFILE_STATS_TOKEN != '' }}
         run: python scripts/generate_private_contribution_stats.py --output assets/private-contributions.svg --username mashfromband
 
       - name: Create update pull request
+        if: ${{ env.PROFILE_STATS_TOKEN != '' }}
         uses: peter-evans/create-pull-request@v7
         with:
           branch: automation/all-activity-signals
