@@ -14,7 +14,7 @@ in [Organization access](#organization-access-required-for-org-contributions).
 
 The generated SVG may publish:
 
-- Total contributions over the last year (self-view total, private included)
+- Total contributions over the last year (private included; mirrors the owner self view for accessible organizations)
 - Commit, authored pull request, authored issue, and pull request review totals
 - Total accessible repository count
 - Private and public repository counts
