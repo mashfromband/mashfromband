@@ -87,6 +87,9 @@ library unit tests (no extra dependencies):
 python -m unittest discover -s tests
 ```
 
+The `Tests` workflow runs this suite on every pull request and on pushes to
+`main` that touch `scripts/`, `tests/`, or the workflow itself.
+
 ## Updating Stats
 
 The `All Activity Signals` workflow runs once per day and can also be run

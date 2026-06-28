@@ -1,0 +1,34 @@
+name: Tests
+
+on:
+  pull_request:
+    paths:
+      - "scripts/**"
+      - "tests/**"
+      - ".github/workflows/tests.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/**"
+      - "tests/**"
+      - ".github/workflows/tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Python unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests
