@@ -320,7 +320,7 @@ def render_svg(summary: dict[str, str], *, username: str, configured: bool) -> s
   <rect x="28" y="30" width="186" height="8" rx="4" fill="url(#accent)"/>
   <text x="28" y="66" fill="#f8fafc" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="26" font-weight="700">All Activity Signals</text>
   <text x="28" y="314" fill="#cbd5e1" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="14">Stack detail: {text(summary["top_languages"])}</text>
-  <text x="28" y="340" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">Repo split: {text(summary["private_repos"])} private / {text(summary["public_repos"])} public / {text(summary["organization_count"])} org workspaces. Mirrors the owner self view (last 365 days); totals include private contributions.</text>
+  <text x="28" y="340" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">Repo split: {text(summary["private_repos"])} private / {text(summary["public_repos"])} public / {text(summary["organization_count"])} org workspaces. Last 365 days; private included; some org contributions not counted.</text>
   <text x="28" y="362" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">No repository names, URLs, issue titles, or commit messages are published. Latest repo activity: {text(summary["latest_update"])}. Generated: {text(summary["generated_at"])}.</text>
   {''.join(card_svg)}
 </svg>
