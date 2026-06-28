@@ -49,6 +49,28 @@ Required access for full fidelity:
 Without private repository access the query still succeeds, but private
 contributions are reported as part of the public totals only.
 
+### Organization access (required for org contributions)
+
+`contributionsCollection` only counts contributions in organizations the token
+can actually access. Contributions made in an organization are **silently
+excluded** from the totals when the token cannot read that organization, which
+causes an undercount versus the owner's signed-in profile view. For every
+organization whose activity should be counted, ensure:
+
+- **SAML SSO authorization**: if the organization enforces SAML single sign-on,
+  the token must be authorized for it. Settings → Developer settings → Personal
+  access tokens → select the token → **Configure SSO** → Authorize for each
+  organization. (For fine-grained tokens, grant the token to the organization
+  as the resource owner.)
+- **Organization PAT policy**: the organization must allow access via personal
+  access tokens. Organization Settings → Third-party Access / Personal access
+  tokens → allow (or approve) the token. Classic-PAT access can be restricted at
+  the org level.
+- **Membership**: the token owner must be a member (or collaborator) of the org.
+
+To verify which organizations are actually counted, run the diagnostic in the
+Counting Model section below with the token.
+
 ## Counting Model
 
 The script reads the GraphQL `contributionsCollection` for the configured user,
@@ -71,6 +93,21 @@ Repository metadata (accessible repository count, private/public split,
 organization workspace count, and stack detection) comes from the REST
 `/user/repos` endpoint with `affiliation=owner,collaborator,organization_member`,
 so activity across every repository you are involved in is counted.
+
+### Diagnosing missing organizations
+
+If the total is lower than the signed-in profile view, list the repositories the
+token actually counts and confirm the expected organizations appear. Run with
+the same token configured as `PROFILE_STATS_TOKEN` (replace `TOKEN`):
+
+```bash
+curl -s -H "Authorization: Bearer TOKEN" https://api.github.com/graphql -d '{
+  "query": "query { viewer { contributionsCollection { contributionCalendar { totalContributions } commitContributionsByRepository(maxRepositories: 100) { repository { nameWithOwner isPrivate } contributions { totalCount } } } } }"
+}'
+```
+
+Organizations that are missing from the output are not accessible to the token —
+fix their access per the "Organization access" steps above, then re-run.
 
 ### Stack detection
 
