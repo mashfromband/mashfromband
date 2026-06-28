@@ -45,7 +45,6 @@ query($login: String!, $from: DateTime!, $to: DateTime!) {
       totalIssueContributions
       totalPullRequestContributions
       totalPullRequestReviewContributions
-      restrictedContributionsCount
     }
   }
 }
@@ -173,7 +172,6 @@ def collect_activity(token: str, username: str, days: int) -> dict[str, int]:
         "authored_pr_count": int(collection.get("totalPullRequestContributions", 0)),
         "issue_count": int(collection.get("totalIssueContributions", 0)),
         "reviewed_pr_count": int(collection.get("totalPullRequestReviewContributions", 0)),
-        "private_contributions": int(collection.get("restrictedContributionsCount", 0)),
     }
 
 
@@ -224,7 +222,6 @@ def summarize(
     authored_pr_count = int(activity.get("authored_pr_count", 0))
     issue_count = int(activity.get("issue_count", 0))
     reviewed_pr_count = int(activity.get("reviewed_pr_count", 0))
-    private_contributions = int(activity.get("private_contributions", 0))
     # contributionCalendar.totalContributions already includes private contributions;
     # fall back to the component sum only when the calendar total is unavailable.
     total_contributions = int(activity.get("total_contributions", 0)) or (
@@ -237,7 +234,6 @@ def summarize(
         "pull_requests": str(authored_pr_count),
         "issues": str(issue_count),
         "reviews": str(reviewed_pr_count),
-        "private_contributions": str(private_contributions),
         "accessible_repos": str(len(repositories)),
         "private_repos": str(private_count),
         "public_repos": str(public_count),
@@ -263,7 +259,6 @@ def render_svg(summary: dict[str, str], *, username: str, configured: bool) -> s
             "pull_requests": "Needed",
             "issues": "Needed",
             "reviews": "Needed",
-            "private_contributions": "Needed",
             "accessible_repos": "Setup",
             "private_repos": "Setup",
             "public_repos": "Setup",
@@ -282,8 +277,8 @@ def render_svg(summary: dict[str, str], *, username: str, configured: bool) -> s
         ("Pull requests", summary["pull_requests"]),
         ("Issues", summary["issues"]),
         ("Code reviews", summary["reviews"]),
-        ("Private contributions", summary["private_contributions"]),
         ("Accessible repos", summary["accessible_repos"]),
+        ("Repos touched", summary["active_365"]),
         ("Top stack", summary["top_stack"]),
     ]
     card_svg = []
@@ -322,7 +317,7 @@ def render_svg(summary: dict[str, str], *, username: str, configured: bool) -> s
   <rect x="28" y="30" width="186" height="8" rx="4" fill="url(#accent)"/>
   <text x="28" y="66" fill="#f8fafc" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="26" font-weight="700">All Activity Signals</text>
   <text x="28" y="314" fill="#cbd5e1" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="14">Stack detail: {text(summary["top_languages"])}</text>
-  <text x="28" y="340" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">Repo split: {text(summary["private_repos"])} private / {text(summary["public_repos"])} public / {text(summary["organization_count"])} org workspaces. Mirrors the owner self view (last 365 days).</text>
+  <text x="28" y="340" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">Repo split: {text(summary["private_repos"])} private / {text(summary["public_repos"])} public / {text(summary["organization_count"])} org workspaces. Mirrors the owner self view (last 365 days); totals include private contributions.</text>
   <text x="28" y="362" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">No repository names, URLs, issue titles, or commit messages are published. Latest repo activity: {text(summary["latest_update"])}. Generated: {text(summary["generated_at"])}.</text>
   {''.join(card_svg)}
 </svg>

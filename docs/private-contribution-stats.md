@@ -11,7 +11,6 @@ The generated SVG may publish:
 
 - Total contributions over the last year (self-view total, private included)
 - Commit, authored pull request, authored issue, and pull request review totals
-- Private contribution count (aggregate number only)
 - Total accessible repository count
 - Private and public repository counts
 - Active repository counts for recent time windows
@@ -63,7 +62,10 @@ private contributions:
 - `totalPullRequestContributions` — authored pull requests
 - `totalIssueContributions` — authored issues
 - `totalPullRequestReviewContributions` — pull request reviews
-- `restrictedContributionsCount` — private contributions counted in the total
+
+When the token can read private repositories (`repo` scope), private
+contributions are folded directly into these totals rather than reported as a
+separate restricted count.
 
 Repository metadata (accessible repository count, private/public split,
 organization workspace count, and stack detection) comes from the REST
