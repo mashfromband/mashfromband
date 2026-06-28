@@ -78,6 +78,15 @@ Stack detection considers development languages only. Repositories with no
 detected language are skipped, and `PowerShell` is excluded because it is shell
 automation rather than part of the reported development stack.
 
+## Testing
+
+The generator's pure functions and null/clamp handling are covered by standard
+library unit tests (no extra dependencies):
+
+```
+python -m unittest discover -s tests
+```
+
 ## Updating Stats
 
 The `All Activity Signals` workflow runs once per day and can also be run
