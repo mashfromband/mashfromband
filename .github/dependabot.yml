@@ -8,3 +8,13 @@ updates:
     open-pull-requests-limit: 99
     labels:
       - "dependencies"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 99
+    versioning-strategy: "increase"
+    labels:
+      - "dependencies"

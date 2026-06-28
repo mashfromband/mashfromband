@@ -1,0 +1,21 @@
+{
+	"name": "mashfromband-profile",
+	"version": "0.0.0",
+	"private": true,
+	"description": "GitHub profile repository for mashfromband.",
+	"packageManager": "pnpm@10.33.0",
+	"engines": {
+		"node": ">=22",
+		"pnpm": ">=10"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.1",
+		"@playwright/test": "1.61.1",
+		"@vitest/coverage-v8": "4.1.9",
+		"dependency-cruiser": "18.0.0",
+		"knip": "6.23.0",
+		"typedoc": "0.28.19",
+		"typescript": "6.0.3",
+		"vitest": "4.1.9"
+	}
+}

@@ -18,3 +18,19 @@ Thumbs.db
 *.log
 tmp/
 temp/
+
+# Node / pnpm
+node_modules/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor
+.cursor/
+
+# GoDD local working files (kept local, not published)
+AGENTS.md
+config.godd
+GoDD-MCP-alpha.md
