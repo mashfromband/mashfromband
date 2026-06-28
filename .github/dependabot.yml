@@ -14,7 +14,10 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 99
+    open-pull-requests-limit: 10
     versioning-strategy: "increase"
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
     labels:
       - "dependencies"
