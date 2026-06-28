@@ -59,6 +59,6 @@
   <g>
     <rect x="601" y="178" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="619" y="212" fill="#94a3b8" font-size="13">Top stack</text>
-    <text x="619" y="240" fill="#f8fafc" font-size="22" font-weight="700">TypeScript x24</text>
+    <text x="619" y="240" fill="#f8fafc" font-size="22" font-weight="700">TypeScript</text>
   </g>
 </svg>
