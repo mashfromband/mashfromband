@@ -5,6 +5,11 @@ statistics GitHub shows to the signed-in owner ("self view") in
 `assets/private-contributions.svg`. The numbers include private contributions,
 which public profile cards cannot read.
 
+Contributions made in organizations the token cannot access are intentionally
+not counted, so the published total can be lower than the owner's signed-in
+profile view. The SVG states this, and the steps to include an organization are
+in [Organization access](#organization-access-required-for-org-contributions).
+
 ## Privacy Model
 
 The generated SVG may publish:
