@@ -31,6 +31,8 @@ API_ROOT = "https://api.github.com"
 GRAPHQL_URL = f"{API_ROOT}/graphql"
 REQUEST_TIMEOUT_SECONDS = 20
 REQUEST_RETRIES = 1
+# Cap upstream error bodies echoed into the public repository's Actions log.
+MAX_ERROR_DETAIL = 200
 
 # Languages that are not development languages for stack reporting purposes.
 # PowerShell is shell automation, not part of the development stack we report.
@@ -79,7 +81,7 @@ def request_json(url: str, token: str) -> tuple[Any, dict[str, str]]:
                 headers = {key.lower(): value for key, value in response.headers.items()}
                 return payload, headers
         except HTTPError as error:
-            detail = error.read().decode("utf-8", errors="replace")
+            detail = error.read().decode("utf-8", errors="replace")[:MAX_ERROR_DETAIL]
             raise RuntimeError(f"GitHub API request failed: {error.code} {detail}") from error
         except (IncompleteRead, TimeoutError, socket.timeout, URLError) as error:
             if attempt == REQUEST_RETRIES:
@@ -98,10 +100,10 @@ def request_graphql(token: str, query: str, variables: dict[str, Any]) -> dict[s
             with urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
                 payload = json.loads(response.read().decode("utf-8"))
                 if payload.get("errors"):
-                    raise RuntimeError(f"GitHub GraphQL errors: {payload['errors']}")
+                    raise RuntimeError(f"GitHub GraphQL errors: {str(payload['errors'])[:MAX_ERROR_DETAIL]}")
                 return payload.get("data") or {}
         except HTTPError as error:
-            detail = error.read().decode("utf-8", errors="replace")
+            detail = error.read().decode("utf-8", errors="replace")[:MAX_ERROR_DETAIL]
             raise RuntimeError(f"GitHub GraphQL request failed: {error.code} {detail}") from error
         except (IncompleteRead, TimeoutError, socket.timeout, URLError) as error:
             if attempt == REQUEST_RETRIES:
@@ -152,7 +154,8 @@ def fetch_accessible_repositories(token: str) -> list[dict[str, Any]]:
 def collect_activity(token: str, username: str, days: int) -> dict[str, int]:
     """Read the owner's self-view contribution totals (private contributions included)."""
     now = datetime.now(UTC)
-    since = now - timedelta(days=days)
+    # contributionsCollection rejects a from/to span longer than one year.
+    since = now - timedelta(days=max(1, min(days, 365)))
     variables = {
         "login": username,
         "from": since.isoformat(),
@@ -164,14 +167,15 @@ def collect_activity(token: str, username: str, days: int) -> dict[str, int]:
     if not user:
         raise RuntimeError(f"GitHub GraphQL returned no contributions for login: {username}")
 
-    collection = user.get("contributionsCollection", {})
-    calendar = collection.get("contributionCalendar", {})
+    # GraphQL may return keys present with explicit null values; coalesce defensively.
+    collection = user.get("contributionsCollection") or {}
+    calendar = collection.get("contributionCalendar") or {}
     return {
-        "total_contributions": int(calendar.get("totalContributions", 0)),
-        "commit_count": int(collection.get("totalCommitContributions", 0)),
-        "authored_pr_count": int(collection.get("totalPullRequestContributions", 0)),
-        "issue_count": int(collection.get("totalIssueContributions", 0)),
-        "reviewed_pr_count": int(collection.get("totalPullRequestReviewContributions", 0)),
+        "total_contributions": int(calendar.get("totalContributions") or 0),
+        "commit_count": int(collection.get("totalCommitContributions") or 0),
+        "authored_pr_count": int(collection.get("totalPullRequestContributions") or 0),
+        "issue_count": int(collection.get("totalIssueContributions") or 0),
+        "reviewed_pr_count": int(collection.get("totalPullRequestReviewContributions") or 0),
     }
 
 
@@ -203,13 +207,12 @@ def summarize(
     public_count = sum(1 for repo in repositories if repo.get("private") is False)
     organization_count = len(
         {
-            repo.get("owner", {}).get("login")
+            (repo.get("owner") or {}).get("login")
             for repo in repositories
-            if repo.get("owner", {}).get("type") == "Organization"
+            if (repo.get("owner") or {}).get("type") == "Organization"
         }
     )
 
-    active_90 = sum(1 for updated_at in updated_dates if updated_at >= now - timedelta(days=90))
     active_365 = sum(1 for updated_at in updated_dates if updated_at >= now - timedelta(days=365))
     top_languages = ", ".join(
         f"{language} x{count}" for language, count in language_counts.most_common(4)
@@ -237,7 +240,6 @@ def summarize(
         "accessible_repos": str(len(repositories)),
         "private_repos": str(private_count),
         "public_repos": str(public_count),
-        "active_90": str(active_90),
         "active_365": str(active_365),
         "organization_count": str(organization_count),
         "top_stack": top_stack,
@@ -262,7 +264,6 @@ def render_svg(summary: dict[str, str], *, username: str, configured: bool) -> s
             "accessible_repos": "Setup",
             "private_repos": "Setup",
             "public_repos": "Setup",
-            "active_90": "Needed",
             "active_365": "Needed",
             "organization_count": "Needed",
             "top_stack": "Needed",
