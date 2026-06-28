@@ -30,7 +30,8 @@ from urllib.request import Request, urlopen
 API_ROOT = "https://api.github.com"
 GRAPHQL_URL = f"{API_ROOT}/graphql"
 REQUEST_TIMEOUT_SECONDS = 20
-REQUEST_RETRIES = 1
+# One retry after a transient network failure (timeout / connection reset).
+REQUEST_RETRIES = 2
 # Cap upstream error bodies echoed into the public repository's Actions log.
 MAX_ERROR_DETAIL = 200
 
@@ -279,7 +280,7 @@ def render_svg(summary: dict[str, str], *, username: str, configured: bool) -> s
         ("Issues", summary["issues"]),
         ("Code reviews", summary["reviews"]),
         ("Accessible repos", summary["accessible_repos"]),
-        ("Repos touched", summary["active_365"]),
+        ("Repos updated", summary["active_365"]),
         ("Top stack", summary["top_stack"]),
     ]
     card_svg = []
