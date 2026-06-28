@@ -58,7 +58,7 @@ class SummarizeTests(unittest.TestCase):
 
     def test_excludes_powershell_and_unknown_language(self) -> None:
         summary = gen.summarize(self._repos(), {"total_contributions": 100})
-        self.assertEqual(summary["top_stack"], "Python x1")
+        self.assertEqual(summary["top_stack"], "Python")
         self.assertNotIn("PowerShell", summary["top_languages"])
 
     def test_aggregate_repo_counts(self) -> None:

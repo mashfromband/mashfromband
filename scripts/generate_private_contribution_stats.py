@@ -219,7 +219,8 @@ def summarize(
         f"{language} x{count}" for language, count in language_counts.most_common(4)
     )
     top_language = language_counts.most_common(1)[0] if language_counts else None
-    top_stack = f"{top_language[0]} x{top_language[1]}" if top_language else "N/A"
+    # Top stack card shows the stack name only (no count).
+    top_stack = top_language[0] if top_language else "N/A"
 
     activity = activity or {}
     commit_count = int(activity.get("commit_count", 0))
