@@ -41,6 +41,9 @@ jobs:
         if: ${{ env.PROFILE_STATS_TOKEN != '' }}
         uses: peter-evans/create-pull-request@v7
         with:
+          # Use a PAT (not GITHUB_TOKEN) so the automation PR triggers the
+          # required status checks; PRs opened by GITHUB_TOKEN do not.
+          token: ${{ secrets.PROFILE_STATS_TOKEN }}
           branch: automation/all-activity-signals
           title: "chore: update all activity signals"
           commit-message: "chore: update all activity signals"

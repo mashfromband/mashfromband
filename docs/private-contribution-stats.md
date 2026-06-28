@@ -97,7 +97,10 @@ manually. A daily run keeps the profile fresh while staying comfortably within
 normal GitHub Actions usage for a public profile repository.
 
 When the generated SVG changes, the workflow opens a pull request instead of
-pushing directly to `main`.
+pushing directly to `main`. The pull request is created with
+`PROFILE_STATS_TOKEN` (a PAT) rather than the default `GITHUB_TOKEN`, so the
+required status checks run on it; pull requests opened by `GITHUB_TOKEN` do not
+trigger workflows.
 
 If `PROFILE_STATS_TOKEN` is not configured, the workflow reports a warning and
 skips the refresh steps. This keeps the scheduled workflow green without
