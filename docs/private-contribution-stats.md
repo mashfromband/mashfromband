@@ -1,25 +1,29 @@
 # Private Contribution Stats
 
-This profile repository can publish aggregate-only activity across accessible repositories in `assets/private-contributions.svg`.
+This profile repository publishes an aggregate-only mirror of the contribution
+statistics GitHub shows to the signed-in owner ("self view") in
+`assets/private-contributions.svg`. The numbers include private contributions,
+which public profile cards cannot read.
 
 ## Privacy Model
 
 The generated SVG may publish:
 
-- Total activity over the last year
-- Commit, authored pull request, authored issue, and reviewed pull request totals
+- Total contributions over the last year (self-view total, private included)
+- Commit, authored pull request, authored issue, and pull request review totals
+- Private contribution count (aggregate number only)
 - Total accessible repository count
 - Private and public repository counts
 - Active repository counts for recent time windows
-- Count of organization-owned private workspaces
-- Top primary languages by count
+- Count of organization-owned workspaces
+- Top primary development languages by count
 - Latest repository activity date
 
 The generated SVG must not publish:
 
 - Repository names
 - Repository URLs
-- Organization names derived only from private access
+- Organization names (only an aggregate workspace count is shown)
 - Issue titles
 - Pull request titles
 - Commit messages
@@ -28,32 +32,59 @@ The generated SVG must not publish:
 
 Create a repository secret named `PROFILE_STATS_TOKEN`.
 
+The token must belong to the profile owner so the contribution query returns the
+same private-inclusive totals shown on the owner's own profile.
+
 Recommended token type:
 
-- Fine-grained personal access token
-- Read-only access
-- Repository access limited to the repositories that should be counted
-- Permissions:
-  - Metadata: read
-  - Contents: read
-  - Issues: read
-  - Pull requests: read
+- Fine-grained personal access token, owner-scoped, read-only, or
+- Classic personal access token with `repo` and `read:user` scopes
 
-Classic tokens also work with `repo` scope, but fine-grained tokens are preferred.
+Required access for full fidelity:
+
+- `read:user` (or fine-grained "Profile" read) — required for the
+  `contributionsCollection` GraphQL query
+- `repo` / repository contents read — required for private contributions and
+  private repository counts to be included
+
+Without private repository access the query still succeeds, but private
+contributions are reported as part of the public totals only.
 
 ## Counting Model
 
-The script does not rely on GitHub's profile contribution calendar. Instead, it scans accessible repositories and GitHub search results to count:
+The script reads the GraphQL `contributionsCollection` for the configured user,
+which is the same data source GitHub uses for the contribution graph. When the
+token belongs to the owner, this mirrors the owner self view and includes
+private contributions:
 
-- Commits authored by `mashfromband`
-- Pull requests authored by `mashfromband`
-- Issues authored by `mashfromband`
-- Pull requests reviewed by `mashfromband`
+- `contributionCalendar.totalContributions` — the authoritative total shown on
+  the profile (private included)
+- `totalCommitContributions` — commits
+- `totalPullRequestContributions` — authored pull requests
+- `totalIssueContributions` — authored issues
+- `totalPullRequestReviewContributions` — pull request reviews
+- `restrictedContributionsCount` — private contributions counted in the total
 
-This is intended to represent practical work across public and private repositories more accurately than public profile cards.
+Repository metadata (accessible repository count, private/public split,
+organization workspace count, and stack detection) comes from the REST
+`/user/repos` endpoint with `affiliation=owner,collaborator,organization_member`,
+so activity across every repository you are involved in is counted.
+
+### Stack detection
+
+Stack detection considers development languages only. Repositories with no
+detected language are skipped, and `PowerShell` is excluded because it is shell
+automation rather than part of the reported development stack.
 
 ## Updating Stats
 
-The `All Activity Signals` workflow runs once per day and can also be run manually. A daily run keeps the profile fresh while staying comfortably within normal GitHub Actions usage for a public profile repository.
+The `All Activity Signals` workflow runs once per day and can also be run
+manually. A daily run keeps the profile fresh while staying comfortably within
+normal GitHub Actions usage for a public profile repository.
 
-When the generated SVG changes, the workflow opens a pull request instead of pushing directly to `main`.
+When the generated SVG changes, the workflow opens a pull request instead of
+pushing directly to `main`.
+
+If `PROFILE_STATS_TOKEN` is not configured, the workflow reports a warning and
+skips the refresh steps. This keeps the scheduled workflow green without
+replacing the last published aggregate SVG with setup placeholder data.

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="820" height="388" viewBox="0 0 820 388" role="img" aria-labelledby="title desc">
-  <title id="title">Aggregate activity stats for mashfromband</title>
-  <desc id="desc">Aggregate activity across accessible repositories. Repository names and URLs are not included.</desc>
+  <title id="title">Self-view contribution stats for mashfromband</title>
+  <desc id="desc">Aggregate contribution totals mirroring the signed-in owner view, including private contributions. Repository names and URLs are not included.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#020617"/>
@@ -17,48 +17,48 @@
   <rect x="1" y="1" width="818" height="386" rx="23" fill="none" stroke="#334155"/>
   <rect x="28" y="30" width="186" height="8" rx="4" fill="url(#accent)"/>
   <text x="28" y="66" fill="#f8fafc" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="26" font-weight="700">All Activity Signals</text>
-  <text x="28" y="314" fill="#cbd5e1" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="14">Stack detail: PowerShell x28, JavaScript x24, TypeScript x19, Python x15</text>
-  <text x="28" y="340" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">Repo split: 107 private / 5 public / 12 org workspaces. Daily automation-friendly aggregate.</text>
-  <text x="28" y="362" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">No repository names, URLs, issue titles, or commit messages are published. Latest repo activity: 2026-04-26. Generated: 2026-04-27.</text>
+  <text x="28" y="314" fill="#cbd5e1" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="14">Stack detail: TypeScript x24, JavaScript x24, Python x12, HTML x4</text>
+  <text x="28" y="340" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">Repo split: 106 private / 5 public / 12 org workspaces. Mirrors the owner self view (last 365 days).</text>
+  <text x="28" y="362" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">No repository names, URLs, issue titles, or commit messages are published. Latest repo activity: 2026-06-28. Generated: 2026-06-28.</text>
   
   <g>
     <rect x="28" y="86" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
-    <text x="46" y="120" fill="#94a3b8" font-size="13">Total activity</text>
-    <text x="46" y="148" fill="#f8fafc" font-size="28" font-weight="700">5678</text>
+    <text x="46" y="120" fill="#94a3b8" font-size="13">Total contributions</text>
+    <text x="46" y="148" fill="#f8fafc" font-size="28" font-weight="700">32</text>
   </g>
   <g>
     <rect x="219" y="86" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="237" y="120" fill="#94a3b8" font-size="13">Commits</text>
-    <text x="237" y="148" fill="#f8fafc" font-size="28" font-weight="700">3162</text>
+    <text x="237" y="148" fill="#f8fafc" font-size="28" font-weight="700">19</text>
   </g>
   <g>
     <rect x="410" y="86" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="428" y="120" fill="#94a3b8" font-size="13">Pull requests</text>
-    <text x="428" y="148" fill="#f8fafc" font-size="28" font-weight="700">1257</text>
+    <text x="428" y="148" fill="#f8fafc" font-size="28" font-weight="700">9</text>
   </g>
   <g>
     <rect x="601" y="86" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="619" y="120" fill="#94a3b8" font-size="13">Issues</text>
-    <text x="619" y="148" fill="#f8fafc" font-size="28" font-weight="700">1022</text>
+    <text x="619" y="148" fill="#f8fafc" font-size="28" font-weight="700">3</text>
   </g>
   <g>
     <rect x="28" y="178" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
-    <text x="46" y="212" fill="#94a3b8" font-size="13">Reviewed PRs</text>
-    <text x="46" y="240" fill="#f8fafc" font-size="28" font-weight="700">237</text>
+    <text x="46" y="212" fill="#94a3b8" font-size="13">Code reviews</text>
+    <text x="46" y="240" fill="#f8fafc" font-size="28" font-weight="700">0</text>
   </g>
   <g>
     <rect x="219" y="178" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
-    <text x="237" y="212" fill="#94a3b8" font-size="13">Accessible repos</text>
-    <text x="237" y="240" fill="#f8fafc" font-size="28" font-weight="700">112</text>
+    <text x="237" y="212" fill="#94a3b8" font-size="13">Private contributions</text>
+    <text x="237" y="240" fill="#f8fafc" font-size="28" font-weight="700">0</text>
   </g>
   <g>
     <rect x="410" y="178" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
-    <text x="428" y="212" fill="#94a3b8" font-size="13">Repos touched</text>
-    <text x="428" y="240" fill="#f8fafc" font-size="28" font-weight="700">104</text>
+    <text x="428" y="212" fill="#94a3b8" font-size="13">Accessible repos</text>
+    <text x="428" y="240" fill="#f8fafc" font-size="28" font-weight="700">111</text>
   </g>
   <g>
     <rect x="601" y="178" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="619" y="212" fill="#94a3b8" font-size="13">Top stack</text>
-    <text x="619" y="240" fill="#f8fafc" font-size="22" font-weight="700">PowerShell x28</text>
+    <text x="619" y="240" fill="#f8fafc" font-size="22" font-weight="700">TypeScript x24</text>
   </g>
 </svg>

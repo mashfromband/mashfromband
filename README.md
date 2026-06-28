@@ -99,7 +99,7 @@ RAG / LLM application foundations
 
 ## All Activity Signals
 
-Public GitHub cards cannot read every private repository activity, so this section is generated from a private token and published as aggregate-only data across accessible repositories. It highlights total activity, commits, issues, reviewed pull requests, authored pull requests, accessible repository coverage, and top stack signals without exposing repository names, URLs, issue titles, or commit messages.
+Public GitHub cards cannot read private repository activity, so this section mirrors the contribution statistics GitHub shows to me when I am signed in (the self view), including private contributions, and publishes them as aggregate-only data. It highlights total contributions, commits, pull requests, issues, code reviews, private contributions, accessible repository coverage, and top stack signals without exposing repository names, URLs, issue titles, or commit messages.
 
 <div align="center">
 
