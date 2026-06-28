@@ -1,18 +1,13 @@
 name: Profile README Quality
 
 on:
+  # Run on every pull request and push to main (no path filter) so the
+  # "Markdown links" check always reports a status and can serve as a required
+  # status check without deadlocking PRs that do not touch README.md.
   pull_request:
-    paths:
-      - "README.md"
-      - "assets/private-contributions.svg"
-      - ".github/workflows/profile-readme.yml"
   push:
     branches:
       - main
-    paths:
-      - "README.md"
-      - "assets/private-contributions.svg"
-      - ".github/workflows/profile-readme.yml"
 
 permissions:
   contents: read
