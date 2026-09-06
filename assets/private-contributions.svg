@@ -17,44 +17,44 @@
   <rect x="1" y="1" width="818" height="386" rx="23" fill="none" stroke="#334155"/>
   <rect x="28" y="30" width="186" height="8" rx="4" fill="url(#accent)"/>
   <text x="28" y="66" fill="#f8fafc" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="26" font-weight="700">All Activity Signals</text>
-  <text x="28" y="314" fill="#cbd5e1" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="14">Stack detail: TypeScript x24, JavaScript x24, Python x12, HTML x4</text>
-  <text x="28" y="340" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">Repo split: 106 private / 5 public / 12 org workspaces. Last 365 days; private included; some org contributions not counted.</text>
-  <text x="28" y="362" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">No repository names, URLs, issue titles, or commit messages are published. Latest repo activity: 2026-06-28. Generated: 2026-06-28.</text>
+  <text x="28" y="314" fill="#cbd5e1" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="14">Stack detail: TypeScript x32, JavaScript x23, Python x14, HTML x6</text>
+  <text x="28" y="340" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">Repo split: 115 private / 9 public / 10 org workspaces. Last 365 days; private included; some org contributions not counted.</text>
+  <text x="28" y="362" fill="#94a3b8" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="12">No repository names, URLs, issue titles, or commit messages are published. Latest repo activity: 2026-09-06. Generated: 2026-09-06.</text>
   
   <g>
     <rect x="28" y="86" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="46" y="120" fill="#94a3b8" font-size="13">Total contributions</text>
-    <text x="46" y="148" fill="#f8fafc" font-size="28" font-weight="700">8236</text>
+    <text x="46" y="148" fill="#f8fafc" font-size="28" font-weight="700">37341</text>
   </g>
   <g>
     <rect x="219" y="86" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="237" y="120" fill="#94a3b8" font-size="13">Commits</text>
-    <text x="237" y="148" fill="#f8fafc" font-size="28" font-weight="700">4167</text>
+    <text x="237" y="148" fill="#f8fafc" font-size="28" font-weight="700">15156</text>
   </g>
   <g>
     <rect x="410" y="86" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="428" y="120" fill="#94a3b8" font-size="13">Pull requests</text>
-    <text x="428" y="148" fill="#f8fafc" font-size="28" font-weight="700">1850</text>
+    <text x="428" y="148" fill="#f8fafc" font-size="28" font-weight="700">9482</text>
   </g>
   <g>
     <rect x="601" y="86" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="619" y="120" fill="#94a3b8" font-size="13">Issues</text>
-    <text x="619" y="148" fill="#f8fafc" font-size="28" font-weight="700">1726</text>
+    <text x="619" y="148" fill="#f8fafc" font-size="28" font-weight="700">8789</text>
   </g>
   <g>
     <rect x="28" y="178" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="46" y="212" fill="#94a3b8" font-size="13">Code reviews</text>
-    <text x="46" y="240" fill="#f8fafc" font-size="28" font-weight="700">480</text>
+    <text x="46" y="240" fill="#f8fafc" font-size="28" font-weight="700">3901</text>
   </g>
   <g>
     <rect x="219" y="178" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="237" y="212" fill="#94a3b8" font-size="13">Accessible repos</text>
-    <text x="237" y="240" fill="#f8fafc" font-size="28" font-weight="700">111</text>
+    <text x="237" y="240" fill="#f8fafc" font-size="28" font-weight="700">124</text>
   </g>
   <g>
     <rect x="410" y="178" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
     <text x="428" y="212" fill="#94a3b8" font-size="13">Repos updated</text>
-    <text x="428" y="240" fill="#f8fafc" font-size="28" font-weight="700">102</text>
+    <text x="428" y="240" fill="#f8fafc" font-size="28" font-weight="700">113</text>
   </g>
   <g>
     <rect x="601" y="178" width="170" height="82" rx="16" fill="#111827" stroke="#334155"/>
