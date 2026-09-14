@@ -9,13 +9,13 @@
 		"pnpm": ">=10"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.5.1",
-		"@playwright/test": "1.61.1",
-		"@vitest/coverage-v8": "4.1.9",
-		"dependency-cruiser": "18.0.0",
+		"@biomejs/biome": "2.5.13",
+		"@playwright/test": "1.63.0",
+		"@vitest/coverage-v8": "5.0.0",
+		"dependency-cruiser": "18.2.0",
 		"knip": "6.23.0",
 		"typedoc": "0.28.19",
-		"typescript": "6.0.3",
-		"vitest": "4.1.9"
+		"typescript": "7.0.2",
+		"vitest": "5.0.0"
 	}
 }
