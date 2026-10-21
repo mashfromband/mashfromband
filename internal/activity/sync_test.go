@@ -12,24 +12,30 @@ import (
 )
 
 type syncFixture struct {
-	t                                            *testing.T
-	client                                       *Client
-	pr                                           PR
-	data                                         Data
-	readme                                       string
-	excluded                                     []Exclusion
-	fresh                                        bool
-	failFetch                                    bool
-	holdOnRead                                   bool
-	writeRace                                    bool
-	commits, created, merges, deletes, mutations int
-	writtenData                                  Data
-	writtenReadme                                string
+	behind                                                  bool
+	baseMerges                                              int
+	commitParent                                            string
+	t                                                       *testing.T
+	client                                                  *Client
+	pr                                                      PR
+	data                                                    Data
+	readme                                                  string
+	excluded                                                []Exclusion
+	fresh                                                   bool
+	failFetch                                               bool
+	holdOnRead                                              bool
+	writeRace                                               bool
+	commits, created, merges, deletes, mutations            int
+	writtenData                                             Data
+	writtenReadme                                           string
+	branchExists, closedReview, closedMerged, pendingChecks bool
+	branchSHA, extraPath                                    string
+	dispatches                                              map[string]int
 }
 
 func newSyncFixture(t *testing.T, existing bool) *syncFixture {
 	t.Helper()
-	f := &syncFixture{t: t}
+	f := &syncFixture{t: t, dispatches: map[string]int{}}
 	now := time.Now().UTC().Truncate(time.Second)
 	f.data, f.readme, _ = Build(fixtureConfig(), Data{}, nil, "# handwritten 日本語 English Русский\n![stats](assets/private-contributions.svg)\n"+Start+"\n\n"+End+"\n## Operating Principles\noriginal", nil, now)
 	if existing {
@@ -38,6 +44,8 @@ func newSyncFixture(t *testing.T, existing bool) *syncFixture {
 		f.pr.Head.SHA = strings.Repeat("b", 40)
 		f.pr.Head.Repo.FullName = Profile
 		f.pr.Base.Ref = "main"
+		f.branchExists = true
+		f.branchSHA = f.pr.Head.SHA
 	}
 	f.client = serveClient(t, f.serve)
 	return f
@@ -53,6 +61,25 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 	case p == profileAPI+"/git/ref/heads/main":
 		sendJSON(w, map[string]any{"object": map[string]string{"sha": strings.Repeat("a", 40)}})
 	case p == profileAPI+"/pulls" && r.Method == "GET":
+		if r.URL.Query().Get("state") == "closed" {
+			if f.closedReview {
+				closed := f.pr
+				closed.Number = 30
+				closed.State = "closed"
+				closed.Head.SHA = strings.Repeat("b", 40)
+				closed.Head.Ref = ReviewBranch
+				closed.Head.Repo.FullName = Profile
+				closed.Base.Ref = "main"
+				if f.closedMerged {
+					date := time.Now().UTC()
+					closed.MergedAt = &date
+				}
+				sendJSON(w, []PR{closed})
+			} else {
+				sendJSON(w, []PR{})
+			}
+			return
+		}
 		if f.pr.Number > 0 {
 			sendJSON(w, []PR{f.pr})
 		} else {
@@ -62,7 +89,7 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		f.created++
 		f.pr = PR{Number: 31, URL: "https://github.com/" + Profile + "/pull/31", Created: time.Now().UTC(), State: "open"}
 		f.pr.Head.Ref = ReviewBranch
-		f.pr.Head.SHA = strings.Repeat("e", 40)
+		f.pr.Head.SHA = f.branchSHA
 		f.pr.Head.Repo.FullName = Profile
 		f.pr.Base.Ref = "main"
 		sendJSON(w, f.pr)
@@ -74,7 +101,28 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		}
 		sendJSON(w, f.pr)
 	case strings.HasPrefix(p, profileAPI+"/compare/"):
-		sendJSON(w, map[string]int{"behind_by": 0})
+		files := []map[string]string{}
+		if f.branchExists && f.pr.Number == 0 {
+			files = append(files, map[string]string{"filename": DataPath, "status": "modified"})
+		}
+		if f.extraPath != "" {
+			files = append(files, map[string]string{"filename": f.extraPath, "status": "modified"})
+		}
+		behind := 0
+		if f.behind {
+			behind = 1
+		}
+		sendJSON(w, map[string]any{"behind_by": behind, "files": files})
+	case p == profileAPI+"/merges":
+		var request map[string]string
+		_ = json.NewDecoder(r.Body).Decode(&request)
+		if request["base"] != ReviewBranch || request["head"] != strings.Repeat("a", 40) {
+			f.t.Error("orphan base merge was not pinned")
+		}
+		f.baseMerges++
+		f.behind = false
+		f.branchSHA = strings.Repeat("d", 40)
+		w.WriteHeader(201)
 	case strings.HasPrefix(p, profileAPI+"/contents/"):
 		name := strings.TrimPrefix(p, profileAPI+"/contents/")
 		var b []byte
@@ -134,9 +182,24 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		}
 		sendJSON(w, map[string]string{"sha": strings.Repeat("d", 40)})
 	case p == profileAPI+"/git/commits" && r.Method == "POST":
+		var request struct{ Parents []string }
+		_ = json.NewDecoder(r.Body).Decode(&request)
+		if len(request.Parents) == 1 {
+			f.commitParent = request.Parents[0]
+		} else {
+			f.t.Error("expected one pinned commit parent")
+		}
 		f.commits++
 		sendJSON(w, map[string]string{"sha": strings.Repeat("e", 40)})
 	case p == profileAPI+"/git/refs":
+		if f.branchExists {
+			w.WriteHeader(422)
+			return
+		}
+		var request struct{ SHA string }
+		_ = json.NewDecoder(r.Body).Decode(&request)
+		f.branchExists = true
+		f.branchSHA = request.SHA
 		w.WriteHeader(201)
 	case p == profileAPI+"/git/refs/heads/"+ReviewBranch && r.Method == "PATCH":
 		var update struct {
@@ -152,6 +215,7 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		f.pr.Head.SHA = update.SHA
+		f.branchSHA = update.SHA
 		f.data = f.writtenData
 		f.readme = f.writtenReadme
 		w.WriteHeader(200)
@@ -159,7 +223,12 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		sha := strings.Split(strings.TrimPrefix(p, profileAPI+"/commits/"), "/")[0]
 		runs := []map[string]any{}
 		for _, name := range requiredChecks {
-			runs = append(runs, map[string]any{"name": name, "status": "completed", "conclusion": "success", "head_sha": sha, "app": map[string]int{"id": 15368}})
+			status, conclusion := "completed", "success"
+			if f.pendingChecks && len(f.dispatches) < 2 {
+				status = "queued"
+				conclusion = ""
+			}
+			runs = append(runs, map[string]any{"name": name, "status": status, "conclusion": conclusion, "head_sha": sha, "app": map[string]int{"id": 15368}})
 		}
 		sendJSON(w, map[string]any{"total_count": len(runs), "check_runs": runs})
 	case p == profileAPI+"/pulls/31/merge":
@@ -171,7 +240,15 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		f.merges++
 		sendJSON(w, map[string]any{"merged": true, "sha": strings.Repeat("f", 40)})
 	case p == profileAPI+"/git/ref/heads/"+ReviewBranch:
-		sendJSON(w, map[string]any{"object": map[string]string{"sha": f.pr.Head.SHA}})
+		if !f.branchExists {
+			w.WriteHeader(404)
+			return
+		}
+		sendJSON(w, map[string]any{"object": map[string]string{"sha": f.branchSHA}})
+	case strings.Contains(p, "/actions/workflows/") && strings.HasSuffix(p, "/dispatches"):
+		name := strings.TrimSuffix(strings.TrimPrefix(p, profileAPI+"/actions/workflows/"), "/dispatches")
+		f.dispatches[name]++
+		w.WriteHeader(204)
 	case p == profileAPI+"/git/refs/heads/"+ReviewBranch && r.Method == "DELETE":
 		f.deletes++
 		w.WriteHeader(204)
@@ -186,6 +263,102 @@ func TestSyncNoOpDoesNotCreateCommitBranchOrPR(t *testing.T) {
 	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now().UTC(), 168*time.Hour)
 	if err != nil || result.Changed || result.PR != 0 || f.mutations != 0 {
 		t.Fatalf("no-op wrote GitHub: %#v mutations=%d err=%v", result, f.mutations, err)
+	}
+}
+
+func TestOrphanReviewBranchRecoversWithoutResettingEdits(t *testing.T) {
+	f := newSyncFixture(t, false)
+	f.fresh = true
+	f.branchExists = true
+	f.branchSHA = strings.Repeat("b", 40)
+	e := Entry{ID: "github:101:pull:1", Kind: "pull", Repository: "AutoDevJapan/demo", RepositoryID: 101, Number: 1, URL: "https://github.com/AutoDevJapan/demo/pull/1", Date: time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC), Title: "original", Technologies: []string{"go"}, TechSource: "repository"}
+	f.data, f.readme, _ = Build(fixtureConfig(), f.data, nil, f.readme, []Entry{e}, time.Now())
+	f.data.Entries[0].Title = "中断したブランチの手編集"
+	f.excluded = []Exclusion{{ID: "github:101:pull:2", Reason: "掲載しない"}}
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 168*time.Hour)
+	if err != nil || result.PR != 31 || f.created != 1 || f.writtenData.Entries[0].Title != "中断したブランチの手編集" {
+		t.Fatalf("orphan branch was not recovered: %#v %v", result, err)
+	}
+}
+
+func TestOrphanCompleteDataStillGetsOneReviewPR(t *testing.T) {
+	f := newSyncFixture(t, false)
+	f.branchExists = true
+	f.branchSHA = strings.Repeat("b", 40)
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 168*time.Hour)
+	if err != nil || result.PR != 31 || f.created != 1 || f.commits != 0 {
+		t.Fatalf("already-written orphan was abandoned: %#v %v", result, err)
+	}
+}
+
+func TestOrphanOutOfScopeChangesArePreservedAndRefused(t *testing.T) {
+	f := newSyncFixture(t, false)
+	f.branchExists = true
+	f.branchSHA = strings.Repeat("b", 40)
+	f.fresh = true
+	f.extraPath = "cmd/profile-activity/main.go"
+	_, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err == nil || f.commits != 0 || f.created != 0 || f.merges != 0 {
+		t.Fatalf("out-of-scope orphan was changed: commits=%d err=%v", f.commits, err)
+	}
+}
+
+func TestClosedUnmergedReviewRemainsStopped(t *testing.T) {
+	f := newSyncFixture(t, false)
+	f.branchExists = true
+	f.branchSHA = strings.Repeat("b", 40)
+	f.closedReview = true
+	f.fresh = true
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || result.Outcome != "review-closed" || f.mutations != 0 {
+		t.Fatalf("closed editorial decision was overwritten: %#v %v", result, err)
+	}
+}
+
+func TestMergedBranchNoOpDoesNotCreateAnotherPRorCommit(t *testing.T) {
+	f := newSyncFixture(t, false)
+	f.branchExists = true
+	f.branchSHA = strings.Repeat("b", 40)
+	f.closedReview = true
+	f.closedMerged = true
+	f.behind = true
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || result.PR != 0 || f.mutations != 0 {
+		t.Fatalf("retained merged branch was not no-op: %#v %v", result, err)
+	}
+}
+
+func TestNextReviewCycleMergesMainWithoutResettingBranch(t *testing.T) {
+	f := newSyncFixture(t, false)
+	f.branchExists = true
+	f.branchSHA = strings.Repeat("b", 40)
+	f.closedReview = true
+	f.closedMerged = true
+	f.behind = true
+	f.fresh = true
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 168*time.Hour)
+	if err != nil || result.PR != 31 || f.baseMerges != 1 || f.commitParent != strings.Repeat("d", 40) || f.deletes != 0 {
+		t.Fatalf("next review cycle lost its branch: %#v %v", result, err)
+	}
+}
+
+func TestFormalChecksDispatchAndWaitForSameHead(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.pendingChecks = true
+	f.client.pause = func(context.Context, time.Duration) error { return nil }
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || !result.Published || f.dispatches["tests.yml"] != 1 || f.dispatches["profile-readme.yml"] != 1 {
+		t.Fatalf("dispatch path failed: %#v dispatches=%v err=%v", result, f.dispatches, err)
+	}
+}
+
+func TestHeadChangeDuringDispatchedChecksCannotPublish(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.pendingChecks = true
+	f.client.pause = func(context.Context, time.Duration) error { f.pr.Head.SHA = strings.Repeat("d", 40); return nil }
+	_, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err == nil || f.merges != 0 {
+		t.Fatalf("changed validation head published: %v", err)
 	}
 }
 
@@ -214,7 +387,7 @@ func TestSyncCreatesOneReviewAndPreservesEditsAndExclusion(t *testing.T) {
 func TestSyncCreatedAtDeadlinePublishesValidatedSHA(t *testing.T) {
 	f := newSyncFixture(t, true)
 	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 168*time.Hour)
-	if err != nil || !result.Published || f.merges != 1 || f.deletes != 1 {
+	if err != nil || !result.Published || f.merges != 1 || f.deletes != 0 {
 		t.Fatalf("deadline publication failed %#v %v", result, err)
 	}
 }

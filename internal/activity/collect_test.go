@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -147,6 +149,31 @@ func TestPaginationCannotChangeVerifiedRepository(t *testing.T) {
 	api.RepositoryIDs["AutoDevJapan/demo"] = 101
 	if !api.samePagePath("/repositories/101/pulls", "/repos/AutoDevJapan/demo/pulls") || api.samePagePath("/repositories/999/pulls", "/repos/AutoDevJapan/demo/pulls") {
 		t.Fatal("repository-bound pagination failed")
+	}
+}
+
+func TestProductionConfigRejectsEnglishCustomerContext(t *testing.T) {
+	b, err := os.ReadFile(filepath.Join("..", "..", ConfigPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cfg Config
+	if err = Decode(b, &cfg); err != nil {
+		t.Fatal(err)
+	}
+	if err = cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	r := cfg.Repositories[0]
+	if cfg.eligible(r, "feat: customer data export", "github-actions[bot]", nil) {
+		t.Fatal("production policy accepted customer context")
+	}
+	e, err := cfg.entry(r, "pull", 1, "feat: offline export", "Customer incident for an individual account.", "https://github.com/"+r.Name+"/pull/1", time.Now(), nil)
+	if err != nil || e.Summary != "offline export" {
+		t.Fatalf("production summary retained customer context: %#v %v", e, err)
+	}
+	if !cfg.eligible(r, "feat(clients): connect shared encrypted items and attachments", "github-actions[bot]", nil) {
+		t.Fatal("useful AI-authored client feature should remain eligible")
 	}
 }
 

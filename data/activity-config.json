@@ -25,6 +25,6 @@
     {"id": "typescript", "name": "TypeScript"},
     {"id": "lua", "name": "Lua"}
   ],
-  "exclude_titles": ["(?i)\\b(acceptance|workflow|ci|doctest|clippy|nextest|todo|owner|internal|fixture|diagnostic)\\b", "オーナー|本人|受領|未送信|未公開|承認|顧客|クライアント案件|社内|運用|配備|文書|手順|検査|検証|診断|監督|資格|定期|体制|料金|契約|請求"],
+  "exclude_titles": ["(?i)\\b(acceptance|workflow|ci|doctest|clippy|nextest|todo|owner|internal|fixture|diagnostic|customers?)\\b|\\bclient[-_ ]specific\\b", "オーナー|本人|受領|未送信|未公開|承認|顧客|クライアント案件|社内|運用|配備|文書|手順|検査|検証|診断|監督|資格|定期|体制|料金|契約|請求"],
   "readme_limit": 6
 }

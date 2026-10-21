@@ -23,10 +23,11 @@ type Client struct {
 	Base, Token   string
 	HTTP          *http.Client
 	RepositoryIDs map[string]int64
+	pause         func(context.Context, time.Duration) error
 }
 
 func NewClient(token string) *Client {
-	return &Client{Base: "https://api.github.com", Token: token, RepositoryIDs: map[string]int64{}, HTTP: &http.Client{Timeout: 30 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}
+	return &Client{Base: "https://api.github.com", Token: token, RepositoryIDs: map[string]int64{}, pause: delay, HTTP: &http.Client{Timeout: 30 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}
 }
 
 func (c *Client) samePagePath(actual, expected string) bool {

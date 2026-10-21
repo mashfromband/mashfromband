@@ -49,14 +49,22 @@ Repository defaults describe project-level evidence, not measured proficiency.
 
 The existing **All Activity Signals** workflow runs once daily and manually. Its
 private aggregate job alone receives `PROFILE_STATS_TOKEN`. The separate public
-job only receives the ephemeral `GITHUB_TOKEN`, with profile contents/PR write and
-Actions dispatch permissions. It never reads `PROFILE_STATS_TOKEN` or `GH_TOKEN`.
+job only receives the ephemeral `GITHUB_TOKEN`, with profile contents/PR write,
+Checks read and Actions dispatch permissions. It never reads `PROFILE_STATS_TOKEN` or `GH_TOKEN`.
 
 One `automation/public-activity` PR accumulates changes. The branch is not rebuilt
 or force pushed. Files are read by immutable SHA; a non-force ref update rejects a
 concurrent editor. Other changed paths/deletions are refused. When needed, GitHub's
 expected-head branch-update API integrates main and retains manual edits; merge
-conflicts fail without resetting the proposal.
+conflicts fail without resetting the proposal. If PR creation was interrupted
+after ref creation, the existing branch is inspected and its permitted files and
+editorial changes are reused. Unrelated paths or renames are refused. A PR that
+was closed without merging stays stopped.
+
+The one automation branch is retained after publication to protect late edits.
+The next changed cycle merges main into it on GitHub and opens a new confirmation
+PR; an unchanged cycle makes no commit/PR. This also avoids a read-then-delete
+race against an editor. The implementation branch is separate.
 
 Normal publication is due **168 hours after the PR's `created_at`**, irrespective
 of later updates. After the deadline and without `hold`, formal **Markdown links**,
@@ -102,6 +110,9 @@ merge/edit retention, marker updates, deadline handling and exclusion validation
 They passed after implementation. Further tests cover real HTTP-shaped pagination,
 public-source verification, filters, plain summaries, technology evidence,
 fixed-SHA check provenance, no-op remote updates and concurrent editing failures.
+The actual production config is tested for English customer-context exclusion,
+including summary fallback. Orphan recovery, retained merged branches, deliberate
+closure, and the pending-check dispatch/wait/SHA-change paths are tested too.
 The implementation was also exercised against the actual allowlisted public API.
 Real workflow/PR/hold/edit/no-op results are recorded in the implementation PR.
 
