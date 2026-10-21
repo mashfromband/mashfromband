@@ -97,6 +97,17 @@ func (api *Client) getPR(ctx context.Context, n int) (PR, error) {
 	_, err := api.Call(ctx, "GET", fmt.Sprintf("%s/pulls/%d", profileAPI, n), nil, &p)
 	return p, err
 }
+
+func (api *Client) sameMain(ctx context.Context, expected string) (bool, error) {
+	var ref struct{ Object struct{ SHA string } }
+	if _, err := api.Call(ctx, "GET", profileAPI+"/git/ref/heads/main", nil, &ref); err != nil {
+		return false, err
+	}
+	if len(ref.Object.SHA) != 40 {
+		return false, errors.New("invalid current main reference")
+	}
+	return ref.Object.SHA == expected, nil
+}
 func validPR(p PR) bool {
 	return p.Number > 0 && p.Head.Repo.FullName == Profile && p.Head.Ref == ReviewBranch && p.Base.Ref == "main" && p.State == "open" && len(p.Head.SHA) == 40 && !p.Created.IsZero()
 }
@@ -407,6 +418,13 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 	if len(main.Object.SHA) != 40 {
 		return result, errors.New("invalid main reference")
 	}
+	if len(api.TrustedMain) != 40 {
+		return result, errors.New("sync requires the trusted collector checkout SHA")
+	}
+	if api.TrustedMain != main.Object.SHA {
+		result.Outcome = "trusted-checkout-stale"
+		return result, nil
+	}
 	var open []PR
 	if err := api.Pages(ctx, profileAPI+"/pulls?state=open&base=main&head=mashfromband%3Aautomation%2Fpublic-activity&per_page=100", &open); err != nil {
 		return result, err
@@ -454,6 +472,14 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 	changed := string(Encode(data)) != string(Encode(in.Data)) || readme != string(in.Readme)
 	due := p.Number > 0 && Ready(p.Created, p.labelNames(), p.Draft, now, reviewDelay)
 	if existingBranch && (changed || due || pending) {
+		current, err := api.sameMain(ctx, main.Object.SHA)
+		if err != nil {
+			return result, err
+		}
+		if !current {
+			result.Outcome = "base-changed-retry"
+			return result, nil
+		}
 		if p.Number > 0 {
 			p, err = api.updateBase(ctx, p)
 			parent = p.Head.SHA
@@ -474,6 +500,16 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 		changed = string(Encode(data)) != string(Encode(in.Data)) || readme != string(in.Readme)
 	}
 	result.Entries = len(data.Entries)
+	if changed || (p.Number == 0 && pending) {
+		current, err := api.sameMain(ctx, main.Object.SHA)
+		if err != nil {
+			return result, err
+		}
+		if !current {
+			result.Outcome = "base-changed-retry"
+			return result, nil
+		}
+	}
 	if changed {
 		p, err = api.publish(ctx, p, parent, map[string]string{"README.md": readme, DataPath: string(Encode(data))}, existingBranch)
 		if err != nil {
@@ -505,6 +541,14 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 	}
 	if !Ready(current.Created, current.labelNames(), current.Draft, time.Now().UTC(), reviewDelay) {
 		result.Outcome = "review-held-or-grace-period"
+		return result, nil
+	}
+	baseUnchanged, err := api.sameMain(ctx, main.Object.SHA)
+	if err != nil {
+		return result, err
+	}
+	if !baseUnchanged {
+		result.Outcome = "base-changed-retry"
 		return result, nil
 	}
 	var merged struct {

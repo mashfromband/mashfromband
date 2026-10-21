@@ -12,6 +12,8 @@ import (
 )
 
 type syncFixture struct {
+	mainReads, mainChangeAt                                 int
+	mergeConflict                                           bool
 	behind                                                  bool
 	baseMerges                                              int
 	commitParent                                            string
@@ -48,6 +50,7 @@ func newSyncFixture(t *testing.T, existing bool) *syncFixture {
 		f.branchSHA = f.pr.Head.SHA
 	}
 	f.client = serveClient(t, f.serve)
+	f.client.TrustedMain = strings.Repeat("a", 40)
 	return f
 }
 func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +62,12 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 	case p == profileAPI:
 		sendJSON(w, map[string]any{"id": 1221617650, "full_name": Profile, "private": false, "visibility": "public"})
 	case p == profileAPI+"/git/ref/heads/main":
-		sendJSON(w, map[string]any{"object": map[string]string{"sha": strings.Repeat("a", 40)}})
+		f.mainReads++
+		sha := strings.Repeat("a", 40)
+		if f.mainChangeAt > 0 && f.mainReads >= f.mainChangeAt {
+			sha = strings.Repeat("f", 40)
+		}
+		sendJSON(w, map[string]any{"object": map[string]string{"sha": sha}})
 	case p == profileAPI+"/pulls" && r.Method == "GET":
 		if r.URL.Query().Get("state") == "closed" {
 			if f.closedReview {
@@ -114,6 +122,10 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		}
 		sendJSON(w, map[string]any{"behind_by": behind, "files": files})
 	case p == profileAPI+"/merges":
+		if f.mergeConflict {
+			w.WriteHeader(409)
+			return
+		}
 		var request map[string]string
 		_ = json.NewDecoder(r.Body).Decode(&request)
 		if request["base"] != ReviewBranch || request["head"] != strings.Repeat("a", 40) {
@@ -339,6 +351,52 @@ func TestNextReviewCycleMergesMainWithoutResettingBranch(t *testing.T) {
 	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 168*time.Hour)
 	if err != nil || result.PR != 31 || f.baseMerges != 1 || f.commitParent != strings.Repeat("d", 40) || f.deletes != 0 {
 		t.Fatalf("next review cycle lost its branch: %#v %v", result, err)
+	}
+}
+
+func TestMainAdvanceCannotPublishAnOlderGeneration(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.mainChangeAt = 3
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || result.Outcome != "base-changed-retry" || result.Published || f.merges != 0 {
+		t.Fatalf("advanced main was ignored: %#v %v", result, err)
+	}
+}
+
+func TestMainAdvanceBeforeWriteKeepsCandidateUnpublished(t *testing.T) {
+	f := newSyncFixture(t, false)
+	f.mainChangeAt = 2
+	f.fresh = true
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || result.Outcome != "base-changed-retry" || f.commits != 0 || f.created != 0 {
+		t.Fatalf("stale generation was written: %#v %v", result, err)
+	}
+}
+
+func TestStaleTrustedCheckoutDoesNotCollectOrWrite(t *testing.T) {
+	f := newSyncFixture(t, false)
+	f.fresh = true
+	f.client.TrustedMain = strings.Repeat("d", 40)
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || result.Outcome != "trusted-checkout-stale" || f.mutations != 0 {
+		t.Fatalf("stale checkout was accepted: %#v %v", result, err)
+	}
+}
+
+func TestOrphanMainMergeConflictPreservesBranchAndData(t *testing.T) {
+	f := newSyncFixture(t, false)
+	f.branchExists = true
+	f.branchSHA = strings.Repeat("b", 40)
+	f.closedReview = true
+	f.closedMerged = true
+	f.behind = true
+	f.fresh = true
+	f.mergeConflict = true
+	before := string(Encode(f.data))
+	readme := f.readme
+	_, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err == nil || f.commits != 0 || f.created != 0 || f.branchSHA != strings.Repeat("b", 40) || string(Encode(f.data)) != before || f.readme != readme {
+		t.Fatalf("merge conflict changed editorial data: %v", err)
 	}
 }
 

@@ -62,6 +62,7 @@ func run(args []string) error {
 	defer cancel()
 	// Deliberately never read PROFILE_STATS_TOKEN or GH_TOKEN here.
 	api := activity.NewClient(os.Getenv("GITHUB_TOKEN"))
+	api.TrustedMain = os.Getenv("TRUSTED_COLLECTOR_SHA")
 	if *mode == "sync" {
 		if api.Token == "" {
 			return errors.New("sync requires the profile workflow GITHUB_TOKEN")

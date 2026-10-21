@@ -20,6 +20,7 @@ import (
 var ErrNotFound = errors.New("GitHub resource not found")
 
 type Client struct {
+	TrustedMain   string
 	Base, Token   string
 	HTTP          *http.Client
 	RepositoryIDs map[string]int64

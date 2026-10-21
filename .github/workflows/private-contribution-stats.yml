@@ -91,6 +91,7 @@ jobs:
       REVIEW_HOURS: ${{ github.event_name == 'workflow_dispatch' && inputs.review_hours || '168' }}
     steps:
       - name: Checkout trusted default-branch collector
+        id: collector
         uses: actions/checkout@v7
         with:
           ref: main
@@ -101,4 +102,6 @@ jobs:
           go-version-file: go.mod
           cache: false
       - name: Collect, preserve edits, check and publish when due
+        env:
+          TRUSTED_COLLECTOR_SHA: ${{ steps.collector.outputs.commit }}
         run: go run ./cmd/profile-activity -mode sync -review-hours "$REVIEW_HOURS"

@@ -61,7 +61,9 @@ after ref creation, the existing branch is inspected and its permitted files and
 editorial changes are reused. Unrelated paths or renames are refused. A PR that
 was closed without merging stays stopped.
 
-The one automation branch is retained after publication to protect late edits.
+The collector does not delete the automation branch after publication, protecting
+late edits from a separate read-then-delete operation. The repository's existing
+automatic branch-deletion setting may still remove it; both states are supported.
 The next changed cycle merges main into it on GitHub and opens a new confirmation
 PR; an unchanged cycle makes no commit/PR. This also avoids a read-then-delete
 race against an editor. The implementation branch is separate.
@@ -72,6 +74,14 @@ of later updates. After the deadline and without `hold`, formal **Markdown links
 from the GitHub Actions app. The collector explicitly dispatches the two existing
 check workflows; it does not assume token-generated PR/push events will run them.
 It then re-reads the PR and labels and merges with the validated SHA pinned.
+
+`TRUSTED_COLLECTOR_SHA` is the actual checkout commit reported by the checkout
+action. It must match main at the start. Main is checked again before branch/data
+writes and immediately before publication. If it advances, the run defers with
+`base-changed-retry` (or `trusted-checkout-stale`) and does not publish. The next
+normal run starts with a fresh trusted checkout, re-merges main, regenerates the
+proposal and validates the new head. This avoids hot-reloading policy into an old
+collector. The repository's strict required checks remain in force as well.
 
 The manual workflow has `review_hours=0` solely for explicit acceptance or an
 intentional immediate publication. Scheduled runs always use 168. This still
