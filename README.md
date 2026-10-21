@@ -114,11 +114,22 @@ Public GitHub cards cannot read private repository activity, so this section mir
 
 公開製品の開発記録。更新: 2026-10-21 (UTC)。
 
-対象となる公開活動はまだありません。
+| Date | Public development | Technology |
+| --- | --- | --- |
+| 2026-10-11 | [暗号化した共有項目と添付をクライアントへ接続](https://github.com/AutoDevJapan/PassShare/pull/711) — 暗号化した項目と添付の共通処理を、デスクトップ・モバイル・ブラウザ拡張へ接続しました。 | Rust |
+| 2026-10-11 | [translate recovery and align support terms](https://github.com/AutoDevJapan/PassShare/pull/709) — ロシア語の復旧フォームに32件の英語が残っていました。説明とエラーを翻訳し、ログイン復旧との分離、コードの別保管、応答不明時の同じ保存の確認を維持しました。 | Rust, TypeScript |
+| 2026-10-11 | [support recipient attachment snapshots](https://github.com/AutoDevJapan/PassShare/pull/708) — 共有受信者が添付を読み取るとき、Rust SDKに対応する状態取得と項目取得がありませんでした。型付きの読取を追加し、独立して保持した鍵世代と項目contextを照合します。正式受入も実SDK経由へ接続しました。ロシア語の復旧説明を翻訳しました。 | Rust, TypeScript |
+| 2026-10-10 | [共有相手の鍵確認と実添付の暗号化を正式APIへ接続](https://github.com/AutoDevJapan/PassShare/pull/701) — 暗号化した項目と実添付を同じ取引で保存するAPI、SDK、WASM接続と、相手の公開コードを独立して照合するWeb画面を追加します。添付の名前と任意バイトは端末で暗号化し、版・鍵世代・認証済み項目参照と保存状態を照合します。現在の参加状態と相手の鍵を共有直前にも確認します。 | Rust, TypeScript |
+| 2026-10-10 | [op互換CLIから暗号化項目を安全な入力と同じ再送で扱う](https://github.com/AutoDevJapan/PassShare/pull/697) — 所有者の現在のセッションを使う明示的な暗号化モードをop互換CLIへ追加します。Coreで全項目JSONを暗号化・復号し、保存は期待版で比較します。準備済み要求の明示的な再送では同じIDと暗号文を使い、古い版や削除後の再作成は409で拒否します。全JSONを保持した選択編集、重複JSON拒否、NFC正規化、公開IDと鍵の期待条件の分離を含みます。 | Rust, TypeScript |
+| 2026-10-10 | [端末の緊急キットでパスワードボックスを復旧できるようにする](https://github.com/AutoDevJapan/PassShare/pull/695) — マスターパスワードを失った端末のパスワードボックスを、緊急キットのコードで復旧できるようにします。新しいv2ファイルには本文の鍵を認証付きで包んだ復旧情報を保存し、既存v1は通常の読取り・保存で形式を維持します。v1は現在のパスワードによる明示的な有効化でだけ更新します。 | Rust, TypeScript |
 
 ## Technology Evidence
 
-公開活動に結び付く技術を、記録が増えた時点で表示します。
+| Technology | Public evidence |
+| --- | --- |
+| Lua | [日本マップのマルチプレイ分担を準備画面へ追加する](https://github.com/AutoDevJapan/civ6-banseiki/pull/137) / [同盟の城を主要文明以外が所有した場合の停止を防ぐ](https://github.com/AutoDevJapan/civ6-banseiki/pull/136) / [作品一覧・都市継承・散逸と回収を共通の同期観測へ接続する](https://github.com/AutoDevJapan/civ6-banseiki/pull/130) |
+| Rust | [暗号化した共有項目と添付をクライアントへ接続](https://github.com/AutoDevJapan/PassShare/pull/711) / [translate recovery and align support terms](https://github.com/AutoDevJapan/PassShare/pull/709) / [support recipient attachment snapshots](https://github.com/AutoDevJapan/PassShare/pull/708) |
+| TypeScript | [translate recovery and align support terms](https://github.com/AutoDevJapan/PassShare/pull/709) / [support recipient attachment snapshots](https://github.com/AutoDevJapan/PassShare/pull/708) / [共有相手の鍵確認と実添付の暗号化を正式APIへ接続](https://github.com/AutoDevJapan/PassShare/pull/701) |
 
 技術は変更の `tech:<id>` ラベル、未指定なら公開リポジトリの技術を参照しています。熟練度の評価ではありません。
 <!-- PUBLIC-ACTIVITY:END -->
