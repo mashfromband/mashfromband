@@ -50,7 +50,8 @@ Repository defaults describe project-level evidence, not measured proficiency.
 The existing **All Activity Signals** workflow runs once daily and manually. Its
 private aggregate job alone receives `PROFILE_STATS_TOKEN`. The separate public
 job only receives the ephemeral `GITHUB_TOKEN`, with profile contents/PR write,
-Checks read and Actions dispatch permissions. It never reads `PROFILE_STATS_TOKEN` or `GH_TOKEN`.
+Checks read, commit-status write and Actions dispatch permissions. It never reads
+`PROFILE_STATS_TOKEN` or `GH_TOKEN`.
 
 One `automation/public-activity` PR accumulates changes. The branch is not rebuilt
 or force pushed. Files are read by immutable SHA; a non-force ref update rejects a
@@ -73,7 +74,29 @@ of later updates. After the deadline and without `hold`, formal **Markdown links
 **Python unit tests** and **Go activity tests** must succeed on that exact HEAD
 from the GitHub Actions app. The collector explicitly dispatches the two existing
 check workflows; it does not assume token-generated PR/push events will run them.
-It then re-reads the PR and labels and merges with the validated SHA pinned.
+GitHub does not count `workflow_dispatch` job checks toward protected-branch PR
+requirements. Before publication the collector verifies each successful check's
+Actions app, exact HEAD, workflow path, source repository, event, branch and log
+URL. Only after all three are verified does it report their real results through
+the commit-status API, using the same check names and links to the actual jobs.
+Existing required checks and their required GitHub Actions app are retained.
+Matching reports are reused; failed/unverified checks never become success
+statuses. Checks are refreshed before GitHub's seven-day result expiry, so an
+unchanged proposal can publish after its normal seven-day grace period.
+Reports are read from the paginated status-list endpoint, which includes the
+creator. A known source workflow that is still finishing is retried at most five
+reads with two-second waits; identity mismatches or failed workflows stop at once.
+The collector then re-reads the PR and labels and merges with the validated SHA
+pinned. A late hold or edit during status reporting still stops publication.
+
+If the merge response is lost or malformed, the PR is read back once without
+repeating the merge request. A matching merged PR with a valid merge commit
+confirms publication. A definite HTTP rejection with the same PR still open is
+reported as rejected; other unknown outcomes remain unconfirmed. Incomplete
+validation is distinguished from an actual failed check.
+
+References: [required checks and eligible workflow events](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks),
+[commit-status API](https://docs.github.com/en/rest/commits/statuses).
 
 `TRUSTED_COLLECTOR_SHA` is the actual checkout commit reported by the checkout
 action. It must match main at the start. Main is checked again before branch/data
@@ -120,6 +143,9 @@ merge/edit retention, marker updates, deadline handling and exclusion validation
 They passed after implementation. Further tests cover real HTTP-shaped pagination,
 public-source verification, filters, plain summaries, technology evidence,
 fixed-SHA check provenance, no-op remote updates and concurrent editing failures.
+The real dispatch-check/HTTP405 failure is reproduced before its repair. Tests
+also reject mismatched or failed workflow evidence and failed status reporting,
+reuse matching status reports and refresh expired results before publication.
 The actual production config is tested for English customer-context exclusion,
 including summary fallback. Orphan recovery, retained merged branches, deliberate
 closure, and the pending-check dispatch/wait/SHA-change paths are tested too.
