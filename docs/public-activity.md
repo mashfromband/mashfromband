@@ -83,8 +83,17 @@ Existing required checks and their required GitHub Actions app are retained.
 Matching reports are reused; failed/unverified checks never become success
 statuses. Checks are refreshed before GitHub's seven-day result expiry, so an
 unchanged proposal can publish after its normal seven-day grace period.
+Reports are read from the paginated status-list endpoint, which includes the
+creator. A known source workflow that is still finishing is retried at most five
+reads with two-second waits; identity mismatches or failed workflows stop at once.
 The collector then re-reads the PR and labels and merges with the validated SHA
 pinned. A late hold or edit during status reporting still stops publication.
+
+If the merge response is lost or malformed, the PR is read back once without
+repeating the merge request. A matching merged PR with a valid merge commit
+confirms publication. A definite HTTP rejection with the same PR still open is
+reported as rejected; other unknown outcomes remain unconfirmed. Incomplete
+validation is distinguished from an actual failed check.
 
 References: [required checks and eligible workflow events](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks),
 [commit-status API](https://docs.github.com/en/rest/commits/statuses).
