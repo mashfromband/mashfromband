@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-10-21T05:01:04.982868841Z",
+  "updated": "2026-10-21T05:05:10.057038818Z",
   "entries": [
     {
       "id": "github:1131498455:pull:711",
@@ -1047,7 +1047,7 @@
       "url": "https://github.com/AutoDevJapan/PassShare/pull/310",
       "date": "2026-07-03T15:19:25Z",
       "title": "bump vite to ^8.0.16 for GHSA-fx2h-pf6j-xcff (#307)",
-      "summary": "security-audit.yml の pnpm-audit が 4 パッケージで fail していたのを解消する。原因は vite の high advisory **GHSA-fx2h-pf6j-xcff**（server.fs.deny bypass on Windows alternate paths、patched >=8.0.16）。",
+      "summary": "security-audit.yml の pnpm-audit が 4 パッケージで fail していたのを解消する。原因は vite の high advisory **GHSA-fx2h-pf6j-xcff**（server.fs.deny bypass on Windows alternate paths、patched \u003e=8.0.16）。",
       "technologies": [
         "rust",
         "typescript"
@@ -1693,23 +1693,7 @@
         "typescript"
       ],
       "tech_source": "repository"
-    },
-    {
-      "id": "github:1131498455:release:275948252",
-      "kind": "release",
-      "repository": "AutoDevJapan/PassShare",
-      "repository_id": 1131498455,
-      "number": 275948252,
-      "url": "https://github.com/AutoDevJapan/PassShare/releases/tag/v1.1.0",
-      "date": "2026-01-12T09:45:25Z",
-      "title": "PassShare v1.1.0",
-      "summary": "PassShare v1.1.0",
-      "technologies": [
-        "rust",
-        "typescript"
-      ],
-      "tech_source": "repository"
     }
   ],
-  "readme_sha256": "9ec4b5d44199b4412fc94f9d837c0b77d2994b5bbafa8fde9a61fe386006a333"
+  "readme_sha256": "a8ac23fd91d5902a02b66a3e149f02b94844d850b71cbd31c2b4441e8cd359b1"
 }
