@@ -13,6 +13,12 @@ import (
 )
 
 type syncFixture struct {
+	wrongRunRepository, wrongRunEvent, wrongDetailsURL      bool
+	afterStatuses                                           func()
+	requireCommitStatuses, staleChecks                      bool
+	wrongWorkflow, wrongRunHead, failedSourceRun            bool
+	statusFailure                                           bool
+	statusReports                                           []map[string]string
 	refResponseLost, refReadFails                           bool
 	refWrites                                               int
 	staleViewSHA                                            string
@@ -267,16 +273,78 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		f.checkReads++
 		sha := strings.Split(strings.TrimPrefix(p, profileAPI+"/commits/"), "/")[0]
 		runs := []map[string]any{}
-		for _, name := range requiredChecks {
+		for i, name := range requiredChecks {
 			status, conclusion := "completed", "success"
 			if f.pendingChecks && len(f.dispatches) < 2 {
 				status = "queued"
 				conclusion = ""
 			}
-			runs = append(runs, map[string]any{"name": name, "status": status, "conclusion": conclusion, "head_sha": sha, "app": map[string]int{"id": 15368}})
+			suite := 2
+			if name == "Markdown links" {
+				suite = 1
+			}
+			completed := time.Now().UTC().Add(-time.Minute)
+			if f.staleChecks && len(f.dispatches) < 2 {
+				completed = completed.Add(-8 * 24 * time.Hour)
+			}
+			details := fmt.Sprintf("https://github.com/%s/actions/runs/%d/job/%d", Profile, 10+suite, 100+i)
+			if f.wrongDetailsURL {
+				details = "https://example.test/unrelated"
+			}
+			runs = append(runs, map[string]any{"id": 100 + i, "name": name, "status": status, "conclusion": conclusion, "head_sha": sha, "app": map[string]int{"id": 15368}, "check_suite": map[string]int{"id": suite}, "completed_at": completed, "details_url": details})
 		}
 		sendJSON(w, map[string]any{"total_count": len(runs), "check_runs": runs})
+	case p == profileAPI+"/actions/runs":
+		workflow, id := "tests.yml", 12
+		if r.URL.Query().Get("check_suite_id") == "1" {
+			workflow, id = "profile-readme.yml", 11
+		}
+		if f.wrongWorkflow {
+			workflow = "unrelated.yml"
+		}
+		sha := f.pr.Head.SHA
+		if f.wrongRunHead {
+			sha = strings.Repeat("f", 40)
+		}
+		conclusion := "success"
+		if f.failedSourceRun {
+			conclusion = "failure"
+		}
+		repo := map[string]any{"id": 1221617650, "full_name": Profile}
+		if f.wrongRunRepository {
+			repo = map[string]any{"id": 999, "full_name": "other/repo"}
+		}
+		event := "workflow_dispatch"
+		if f.wrongRunEvent {
+			event = "repository_dispatch"
+		}
+		sendJSON(w, map[string]any{"total_count": 1, "workflow_runs": []map[string]any{{"id": id, "event": event, "path": ".github/workflows/" + workflow, "head_sha": sha, "head_branch": ReviewBranch, "status": "completed", "conclusion": conclusion, "repository": repo, "head_repository": repo}}})
+	case strings.HasPrefix(p, profileAPI+"/commits/") && strings.HasSuffix(p, "/status"):
+		statuses := []map[string]any{}
+		for _, report := range f.statusReports {
+			statuses = append(statuses, map[string]any{"context": report["context"], "state": report["state"], "target_url": report["target_url"], "creator": map[string]string{"login": "github-actions[bot]"}})
+		}
+		sendJSON(w, map[string]any{"statuses": statuses})
+	case strings.HasPrefix(p, profileAPI+"/statuses/") && r.Method == "POST":
+		if f.statusFailure {
+			w.WriteHeader(403)
+			return
+		}
+		var report map[string]string
+		_ = json.NewDecoder(r.Body).Decode(&report)
+		if p != profileAPI+"/statuses/"+f.pr.Head.SHA || report["state"] != "success" {
+			f.t.Error("status did not report the validated SHA and result")
+		}
+		f.statusReports = append(f.statusReports, report)
+		if len(f.statusReports) == 3 && f.afterStatuses != nil {
+			f.afterStatuses()
+		}
+		sendJSON(w, map[string]any{"context": report["context"], "state": report["state"], "target_url": report["target_url"], "creator": map[string]string{"login": "github-actions[bot]"}})
 	case p == profileAPI+"/pulls/31/merge":
+		if f.requireCommitStatuses && len(f.statusReports) != len(requiredChecks) {
+			w.WriteHeader(405)
+			return
+		}
 		var request struct{ SHA string }
 		_ = json.NewDecoder(r.Body).Decode(&request)
 		if request.SHA != f.pr.Head.SHA {
@@ -547,6 +615,74 @@ func TestFormalChecksDispatchAndWaitForSameHead(t *testing.T) {
 	}
 }
 
+// workflow_dispatch job checks are real validation but GitHub does not use them
+// for PR branch protection. Report their verified results via commit statuses.
+func TestDispatchedChecksSatisfyProtectionWithRealEvidence(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.requireCommitStatuses = true
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || !result.Published || len(f.statusReports) != 3 {
+		t.Fatalf("dispatched green checks could not publish: %#v reports=%v err=%v", result, f.statusReports, err)
+	}
+	for i, report := range f.statusReports {
+		if report["context"] != requiredChecks[i] || !strings.Contains(report["target_url"], "/job/") {
+			t.Fatalf("status lost the actual validation evidence: %v", report)
+		}
+	}
+	_, err = Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || len(f.statusReports) != 3 {
+		t.Fatalf("unchanged evidence duplicated statuses: %v %v", f.statusReports, err)
+	}
+}
+
+func TestStatusReportingRejectsUntrustedOrFailedEvidence(t *testing.T) {
+	for _, which := range []string{"workflow", "head", "repository", "event", "log", "source-failed", "report-failed"} {
+		t.Run(which, func(t *testing.T) {
+			f := newSyncFixture(t, true)
+			f.wrongWorkflow = which == "workflow"
+			f.wrongRunHead = which == "head"
+			f.wrongRunRepository = which == "repository"
+			f.wrongRunEvent = which == "event"
+			f.wrongDetailsURL = which == "log"
+			f.failedSourceRun = which == "source-failed"
+			f.statusFailure = which == "report-failed"
+			result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+			if err == nil || result.Published || f.merges != 0 || len(f.statusReports) != 0 {
+				t.Fatalf("unverified checks published: %s %#v %v", which, result, err)
+			}
+		})
+	}
+}
+
+func TestPublicationControlsAreRecheckedAfterStatusReporting(t *testing.T) {
+	for _, which := range []string{"hold", "edit"} {
+		t.Run(which, func(t *testing.T) {
+			f := newSyncFixture(t, true)
+			f.afterStatuses = func() {
+				if which == "hold" {
+					f.pr.Labels = []label{{Name: "hold"}}
+				} else {
+					f.pr.Head.SHA = strings.Repeat("d", 40)
+				}
+			}
+			result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+			if result.Published || f.merges != 0 || len(f.statusReports) != 3 || (which == "hold" && (err != nil || result.Outcome != "review-held-or-grace-period")) || (which == "edit" && err == nil) {
+				t.Fatalf("late publication control was ignored: %s %#v %v", which, result, err)
+			}
+		})
+	}
+}
+
+func TestExpiredChecksAreRefreshedBeforePublication(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.staleChecks = true
+	f.client.pause = func(context.Context, time.Duration) error { return nil }
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || !result.Published || len(f.dispatches) != 2 || len(f.statusReports) != 3 {
+		t.Fatalf("old checks reused past GitHub's seven-day validity: %#v %v", result, err)
+	}
+}
+
 func TestHeadChangeDuringDispatchedChecksCannotPublish(t *testing.T) {
 	f := newSyncFixture(t, true)
 	f.pendingChecks = true
@@ -630,9 +766,9 @@ func TestChecksCannotUseAnotherSHAOrAnotherApp(t *testing.T) {
 				}
 				sendJSON(w, map[string]any{"total_count": 3, "check_runs": runs})
 			})
-			ok, _, err := api.checks(context.Background(), strings.Repeat("a", 40))
-			if err != nil || ok {
-				t.Fatalf("wrong check provenance accepted %v %v", ok, err)
+			passed, _, err := api.checks(context.Background(), strings.Repeat("a", 40))
+			if err != nil || len(passed) != 0 {
+				t.Fatalf("wrong check provenance accepted %v %v", passed, err)
 			}
 		})
 	}

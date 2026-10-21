@@ -358,23 +358,27 @@ func (api *Client) publish(ctx context.Context, p PR, parent string, files map[s
 }
 
 type checkRun struct {
+	ID                       int64
 	Name, Status, Conclusion string
-	Head                     string `json:"head_sha"`
+	Head                     string             `json:"head_sha"`
+	Completed                time.Time          `json:"completed_at"`
+	DetailsURL               string             `json:"details_url"`
+	Suite                    struct{ ID int64 } `json:"check_suite"`
 	App                      struct{ ID int64 }
 }
 
 var requiredChecks = []string{"Markdown links", "Python unit tests", "Go activity tests"}
 
-func (api *Client) checks(ctx context.Context, sha string) (bool, bool, error) {
+func (api *Client) checks(ctx context.Context, sha string) ([]checkRun, bool, error) {
 	var result struct {
 		Total int        `json:"total_count"`
 		Runs  []checkRun `json:"check_runs"`
 	}
 	if _, err := api.Call(ctx, "GET", profileAPI+"/commits/"+sha+"/check-runs?per_page=100&filter=latest", nil, &result); err != nil {
-		return false, false, err
+		return nil, false, err
 	}
 	if result.Total > 100 {
-		return false, false, errors.New("check run list incomplete")
+		return nil, false, errors.New("check run list incomplete")
 	}
 	seen := map[string]checkRun{}
 	for _, run := range result.Runs {
@@ -385,9 +389,12 @@ func (api *Client) checks(ctx context.Context, sha string) (bool, bool, error) {
 		}
 	}
 	all, failed := true, false
+	passed := []checkRun{}
 	for _, name := range requiredChecks {
 		r, ok := seen[name]
-		if !ok || r.Status != "completed" {
+		// Required results expire after seven days on GitHub. Refresh before
+		// that boundary, including when an unchanged PR reaches its deadline.
+		if !ok || r.Status != "completed" || r.Completed.IsZero() || r.Completed.Before(time.Now().Add(-167*time.Hour)) || r.Completed.After(time.Now().Add(time.Minute)) {
 			all = false
 			continue
 		}
@@ -395,8 +402,12 @@ func (api *Client) checks(ctx context.Context, sha string) (bool, bool, error) {
 			all = false
 			failed = true
 		}
+		passed = append(passed, r)
 	}
-	return all, failed, nil
+	if !all {
+		passed = nil
+	}
+	return passed, failed, nil
 }
 
 func delay(ctx context.Context, d time.Duration) error {
@@ -409,45 +420,45 @@ func delay(ctx context.Context, d time.Duration) error {
 		return nil
 	}
 }
-func (api *Client) validateHead(ctx context.Context, p PR) error {
-	all, failed, err := api.checks(ctx, p.Head.SHA)
+func (api *Client) validateHead(ctx context.Context, p PR) ([]checkRun, error) {
+	passed, failed, err := api.checks(ctx, p.Head.SHA)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if all {
-		return nil
+	if len(passed) == len(requiredChecks) {
+		return passed, nil
 	}
 	if failed {
-		return errors.New("formal checks failed on review head")
+		return nil, errors.New("formal checks failed on review head")
 	}
 	for _, workflow := range []string{"tests.yml", "profile-readme.yml"} {
 		if _, err = api.Call(ctx, "POST", profileAPI+"/actions/workflows/"+workflow+"/dispatches", map[string]string{"ref": ReviewBranch}, nil); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	for i := 0; i < 60; i++ {
 		if err = api.pause(ctx, 5*time.Second); err != nil {
-			return err
+			return nil, err
 		}
 		current, e := api.getPR(ctx, p.Number)
 		if e != nil {
-			return e
+			return nil, e
 		}
 		if current.Head.SHA != p.Head.SHA {
-			return errors.New("review head changed during validation")
+			return nil, errors.New("review head changed during validation")
 		}
-		all, failed, err = api.checks(ctx, p.Head.SHA)
+		passed, failed, err = api.checks(ctx, p.Head.SHA)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		if all {
-			return nil
+		if len(passed) == len(requiredChecks) {
+			return passed, nil
 		}
 		if failed {
-			return errors.New("formal checks failed on review head")
+			return nil, errors.New("formal checks failed on review head")
 		}
 	}
-	return errors.New("formal checks are not complete yet")
+	return nil, errors.New("formal checks are not complete yet")
 }
 
 // Sync reads source files by immutable SHA and only writes the two generated
@@ -604,7 +615,9 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 		return result, nil
 	}
 	result.PR, result.URL, result.Head = p.Number, p.URL, p.Head.SHA
-	if err = api.validateHead(ctx, p); err != nil {
+	passed, err := api.validateHead(ctx, p)
+	if err != nil {
+		result.Outcome = "validation-failed"
 		return result, err
 	}
 	// Re-read labels and identity after checks, immediately before a fixed-SHA merge.
@@ -614,6 +627,23 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 	}
 	if !validPR(current) || current.Head.SHA != p.Head.SHA {
 		return result, errors.New("review PR changed before publication")
+	}
+	if !Ready(current.Created, current.labelNames(), current.Draft, time.Now().UTC(), reviewDelay) {
+		result.Outcome = "review-held-or-grace-period"
+		return result, nil
+	}
+	if err = api.reportChecks(ctx, p.Head.SHA, passed); err != nil {
+		result.Outcome = "check-report-failed"
+		return result, err
+	}
+	// Status reporting takes network time too. Recheck the publication controls
+	// once more so a late hold or editor change cannot be overlooked.
+	current, err = api.getPR(ctx, p.Number)
+	if err != nil {
+		return result, err
+	}
+	if !validPR(current) || current.Head.SHA != p.Head.SHA {
+		return result, errors.New("review PR changed during check reporting")
 	}
 	if !Ready(current.Created, current.labelNames(), current.Draft, time.Now().UTC(), reviewDelay) {
 		result.Outcome = "review-held-or-grace-period"
@@ -632,6 +662,7 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 		SHA    string
 	}
 	if _, err = api.Call(ctx, "PUT", fmt.Sprintf("%s/pulls/%d/merge", profileAPI, p.Number), map[string]string{"sha": p.Head.SHA, "merge_method": "squash"}, &merged); err != nil {
+		result.Outcome = "publication-rejected"
 		return result, err
 	}
 	if !merged.Merged || len(merged.SHA) != 40 {
