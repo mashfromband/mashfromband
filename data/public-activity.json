@@ -1,6 +1,1716 @@
 {
   "version": 1,
-  "updated": "2026-10-21T04:17:21.8429113Z",
-  "entries": [],
-  "readme_sha256": "35df261c860a601a6ed7f5aded3e9a0e86988b61f71c43ca6d3b58c9d84c76be"
+  "updated": "2026-10-21T05:01:04.982868841Z",
+  "entries": [
+    {
+      "id": "github:1131498455:pull:711",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 711,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/711",
+      "date": "2026-10-11T16:42:24Z",
+      "title": "connect shared encrypted items and attachments",
+      "summary": "connect shared encrypted items and attachments",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:709",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 709,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/709",
+      "date": "2026-10-11T09:33:51Z",
+      "title": "translate recovery and align support terms",
+      "summary": "ロシア語の復旧フォームに32件の英語が残っていました。説明とエラーを翻訳し、ログイン復旧との分離、コードの別保管、応答不明時の同じ保存の確認を維持しました。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:708",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 708,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/708",
+      "date": "2026-10-11T09:04:52Z",
+      "title": "support recipient attachment snapshots",
+      "summary": "共有受信者が添付を読み取るとき、Rust SDKに対応する状態取得と項目取得がありませんでした。型付きの読取を追加し、独立して保持した鍵世代と項目contextを照合します。正式受入も実SDK経由へ接続しました。ロシア語の復旧説明を翻訳しました。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:701",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 701,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/701",
+      "date": "2026-10-10T22:05:31Z",
+      "title": "共有相手の鍵確認と実添付の暗号化を正式APIへ接続",
+      "summary": "暗号化した項目と実添付を同じ取引で保存するAPI、SDK、WASM接続と、相手の公開コードを独立して照合するWeb画面を追加します。添付の名前と任意バイトは端末で暗号化し、版・鍵世代・認証済み項目参照と保存状態を照合します。現在の参加状態と相手の鍵を共有直前にも確認します。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:697",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 697,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/697",
+      "date": "2026-10-10T15:47:49Z",
+      "title": "op互換CLIから暗号化項目を安全な入力と同じ再送で扱う",
+      "summary": "所有者の現在のセッションを使う明示的な暗号化モードをop互換CLIへ追加します。Coreで全項目JSONを暗号化・復号し、保存は期待版で比較します。準備済み要求の明示的な再送では同じIDと暗号文を使い、古い版や削除後の再作成は409で拒否します。全JSONを保持した選択編集、重複JSON拒否、NFC正規化、公開IDと鍵の期待条件の分離を含みます。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:695",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 695,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/695",
+      "date": "2026-10-10T14:57:34Z",
+      "title": "端末の緊急キットでパスワードボックスを復旧できるようにする",
+      "summary": "マスターパスワードを失った端末のパスワードボックスを、緊急キットのコードで復旧できるようにします。新しいv2ファイルには本文の鍵を認証付きで包んだ復旧情報を保存し、既存v1は通常の読取り・保存で形式を維持します。v1は現在のパスワードによる明示的な有効化でだけ更新します。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:689",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 689,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/689",
+      "date": "2026-10-10T10:10:23Z",
+      "title": "暗号化Web画面を5分の無操作でロックする",
+      "summary": "暗号化Web画面を開いたまま5分操作しないと、Workerを終了して項目一覧・秘密表示・下書きを消します。期限後の最初の入力や遅延応答から秘密を表示・送信できないよう、タイマーに加えて入力前と応答公開前にも期限を確認します。実際の前面入力だけが期限を延長します。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:687",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 687,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/687",
+      "date": "2026-10-10T08:53:48Z",
+      "title": "共有鍵の原子的な失効と暗号化項目の操作を接続する",
+      "summary": "共有鍵の原子的な失効と暗号化項目の操作を接続する",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:683",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 683,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/683",
+      "date": "2026-10-09T23:25:35Z",
+      "title": "共有鍵のRust部品をWASMの公開APIへ接続する",
+      "summary": "共有鍵のRust部品をWASMの公開APIへ接続する",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:679",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 679,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/679",
+      "date": "2026-10-09T21:50:35Z",
+      "title": "暗号化項目の同じ保存再送を書込みなしで受け入れる",
+      "summary": "暗号化項目の保存後に応答を失っても、準備済みの同じ暗号文を安全に再送できます。現在のセッション・確認済み所属・鍵世代・削除済みIDを確認してから、直後の版と本文全体が一致する場合だけ200で返します。書込みと更新時刻の変更は行いません。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:677",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 677,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/677",
+      "date": "2026-10-09T20:30:02Z",
+      "title": "暗号化項目の削除を競合・再送・失効に対応させる",
+      "summary": "暗号化項目の削除を、現在の版と鍵の世代に合わせて確定します。削除と最小の公開記録を一つのトランザクションで保存し、同じ要求は204で再送できます。暗号文・nonce・秘密値は削除記録に残しません。削除済みIDの再作成も拒否します。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1392152644:pull:137",
+      "kind": "pull",
+      "repository": "AutoDevJapan/civ6-banseiki",
+      "repository_id": 1392152644,
+      "number": 137,
+      "url": "https://github.com/AutoDevJapan/civ6-banseiki/pull/137",
+      "date": "2026-10-09T14:51:09Z",
+      "title": "日本マップのマルチプレイ分担を準備画面へ追加する",
+      "summary": "日本マップのマルチプレイ分担を準備画面へ追加する",
+      "technologies": [
+        "rust",
+        "lua"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1392152644:pull:136",
+      "kind": "pull",
+      "repository": "AutoDevJapan/civ6-banseiki",
+      "repository_id": 1392152644,
+      "number": 136,
+      "url": "https://github.com/AutoDevJapan/civ6-banseiki/pull/136",
+      "date": "2026-10-09T09:50:35Z",
+      "title": "同盟の城を主要文明以外が所有した場合の停止を防ぐ",
+      "summary": "城を主要文明以外が所有するとき、同盟の勝利判定が存在しないプレイヤー情報を参照して停止する問題を直しました。対象の城を同盟が保持していない間は勝利判定を保留し、所有者が戻った後に再判定します。",
+      "technologies": [
+        "rust",
+        "lua"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:663",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 663,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/663",
+      "date": "2026-10-08T22:22:17Z",
+      "title": "【PassShare】共有鍵を送り手・宛先・世代に結び付けて暗号化する",
+      "summary": "共有メンバーへパスワードボックスの鍵を渡す暗号部品が無かったため、既存Rust Coreに確認済みの公開鍵を使う受け渡しを追加しました。送り手・宛先・ボックス・世代・公開鍵の指紋を指定した期待値と照合し、サーバーへ復号鍵を渡しません。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1392152644:pull:130",
+      "kind": "pull",
+      "repository": "AutoDevJapan/civ6-banseiki",
+      "repository_id": 1392152644,
+      "number": 130,
+      "url": "https://github.com/AutoDevJapan/civ6-banseiki/pull/130",
+      "date": "2026-10-08T17:30:40Z",
+      "title": "作品一覧・都市継承・散逸と回収を共通の同期観測へ接続する",
+      "summary": "マルチプレイの作品一覧と都市継承を共通の保存観測へ接続します。散逸と回収では、最終受取人と人間の操作担当を区別し、同じ原作品を一度だけ移します。取引と回収の都市予約・作品予約を一緒に照合し、保存後の再参加や重複要求でも本体操作を繰り返しません。",
+      "technologies": [
+        "rust",
+        "lua"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:650",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 650,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/650",
+      "date": "2026-10-08T15:43:14Z",
+      "title": "relock mobile sessions and reject stale authentication",
+      "summary": "【PassShare】モバイルの背景・復帰と5分の放置で再施錠し、遅い認証結果が画面や保管情報を戻す競合を修復しました。Rustが期限・前景・アカウント・解除世代を保持し、画面はIPCとイベントで状態を捨てます。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1392152644:pull:129",
+      "kind": "pull",
+      "repository": "AutoDevJapan/civ6-banseiki",
+      "repository_id": 1392152644,
+      "number": 129,
+      "url": "https://github.com/AutoDevJapan/civ6-banseiki/pull/129",
+      "date": "2026-10-08T11:38:10Z",
+      "title": "マルチプレイの成長・家名・同盟・宗教に同期要求を接続する",
+      "summary": "マルチプレイの成長・家名・同盟・宗教に同期要求を接続する",
+      "technologies": [
+        "rust",
+        "lua"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:643",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 643,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/643",
+      "date": "2026-10-08T07:32:42Z",
+      "title": "共有を保持して所有者を移譲しアカウントを削除する",
+      "summary": "共有を保持して所有者を移譲しアカウントを削除する",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1403886226:pull:17",
+      "kind": "pull",
+      "repository": "AutoDevJapan/KaraokeMaker",
+      "repository_id": 1403886226,
+      "number": 17,
+      "url": "https://github.com/AutoDevJapan/KaraokeMaker/pull/17",
+      "date": "2026-10-08T06:15:03Z",
+      "title": "不完全なMP3の取り込みと採用を拒否し、保存済み音源を修復できるようにする",
+      "summary": "不完全なMP3の取り込みと採用を拒否し、保存済み音源を修復できるようにする",
+      "technologies": [
+        "rust"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:641",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 641,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/641",
+      "date": "2026-10-08T02:51:48Z",
+      "title": "一度限りの復旧キーで認証を戻し旧セッションを失効させる",
+      "summary": "一度限りの復旧キーで認証を戻し旧セッションを失効させる",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1392152644:pull:126",
+      "kind": "pull",
+      "repository": "AutoDevJapan/civ6-banseiki",
+      "repository_id": 1392152644,
+      "number": 126,
+      "url": "https://github.com/AutoDevJapan/civ6-banseiki/pull/126",
+      "date": "2026-10-07T17:45:48Z",
+      "title": "万世紀プール300人を指導者登録し、2人プレイの選択と人物保存へ接続",
+      "summary": "万世紀プールを300人（史実60人・架空240人）へ増やし、2人の人間プレイヤーが同じ台帳から人物を選び、保存・再読込後も同じ人物で続けられるようにします。既存22当主を再利用して278指導者を追加し、第1弾100人の設定を保持します。",
+      "technologies": [
+        "rust",
+        "lua"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:614",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 614,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/614",
+      "date": "2026-10-05T17:37:25Z",
+      "title": "同一サイトで認証CookieとConnectを中継する",
+      "summary": "同一サイトで認証CookieとConnectを中継する",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:606",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 606,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/606",
+      "date": "2026-10-05T15:22:50Z",
+      "title": "端末の変更を暗号化ファイルの保存成功後に確定する",
+      "summary": "デスクトップで作成・編集・削除・CSV取込・同期の保存に失敗しても、変更済みの内容がメモリに残っていました。後の保存で失敗した変更まで確定するため、Rust Coreで変更を別の状態へ適用し、暗号化ファイルの保存成功後に公開する共通処理へ切り替えます。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:602",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 602,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/602",
+      "date": "2026-10-05T10:09:48Z",
+      "title": "入力欄のはみ出しとRust保存部分の開発起動を直す",
+      "summary": "入力欄のはみ出しとRust保存部分の開発起動を直す",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:592",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 592,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/592",
+      "date": "2026-10-05T09:14:06Z",
+      "title": "項目編集のデータ消失と保存失敗・競合を修正する",
+      "summary": "Webで読み込んだ項目を編集すると、フォームが表示しない追加フィールドや複数URLが消えていました。元の項目を保持し、フォームで編集した値だけを更新します。識別子・追加データ・メタデータ・タグも残します。 編集開始時のversionをPUTへ送って古い保存を409で拒否します。PostgreSQLはPUT/PATCHとも条件付きUPDATEを使い、同時更新を一件だけ成功させます。旧クライアントのversion省略は互換性のため維持しま…",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:596",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 596,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/596",
+      "date": "2026-10-05T04:18:32Z",
+      "title": "導入と利用条件の説明を3言語で切り替える",
+      "summary": "導入と利用条件の説明を3言語で切り替える",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:590",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 590,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/590",
+      "date": "2026-10-05T04:15:01Z",
+      "title": "販売前の監査と暗号化・復旧の説明を実装に合わせる",
+      "summary": "販売前の監査と暗号化・復旧の説明を実装に合わせる",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1403886226:pull:11",
+      "kind": "pull",
+      "repository": "AutoDevJapan/KaraokeMaker",
+      "repository_id": 1403886226,
+      "number": 11,
+      "url": "https://github.com/AutoDevJapan/KaraokeMaker/pull/11",
+      "date": "2026-10-04T12:31:37Z",
+      "title": "メタルと速いラップ向けに分離と字幕を改善する",
+      "summary": "メタルと速いラップ向けに分離と字幕を改善する",
+      "technologies": [
+        "rust"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1403886226:pull:6",
+      "kind": "pull",
+      "repository": "AutoDevJapan/KaraokeMaker",
+      "repository_id": 1403886226,
+      "number": 6,
+      "url": "https://github.com/AutoDevJapan/KaraokeMaker/pull/6",
+      "date": "2026-10-04T09:06:11Z",
+      "title": "自作曲の制作サービス調査と4K字幕出力を追加",
+      "summary": "自作曲を持つ歌手・VTuber向けに、歌詞動画と伴奏を3分まで2万円・修正1回で制作する仕様を追加しました。ココナラの現行手数料・権利確認・禁止素材・納期・修正と納品を記録し、残る不足はIssue #2〜#5へ分けています。",
+      "technologies": [
+        "rust"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1392152644:pull:96",
+      "kind": "pull",
+      "repository": "AutoDevJapan/civ6-banseiki",
+      "repository_id": 1392152644,
+      "number": 96,
+      "url": "https://github.com/AutoDevJapan/civ6-banseiki/pull/96",
+      "date": "2026-10-04T07:27:36Z",
+      "title": "吸収の三段階処理と作品原本の継承・返還・回収を実装する",
+      "summary": "吸収の三段階処理と、作品原本の継承・第三者返還・散逸からの回収を実装する単独プレイPoCです。繰り返す停止を調べ、原本の準備、画面側の照会、ゲーム処理側の変更を別段階へ設計し直しました。",
+      "technologies": [
+        "rust",
+        "lua"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1392152644:pull:48",
+      "kind": "pull",
+      "repository": "AutoDevJapan/civ6-banseiki",
+      "repository_id": 1392152644,
+      "number": 48,
+      "url": "https://github.com/AutoDevJapan/civ6-banseiki/pull/48",
+      "date": "2026-09-29T15:31:45Z",
+      "title": "日本マップの史実開始を1534年の規模に応じた栄えた状態にする",
+      "summary": "日本マップの史実開始を1534年の規模に応じた栄えた状態にする",
+      "technologies": [
+        "rust",
+        "lua"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1392152644:pull:29",
+      "kind": "pull",
+      "repository": "AutoDevJapan/civ6-banseiki",
+      "repository_id": 1392152644,
+      "number": 29,
+      "url": "https://github.com/AutoDevJapan/civ6-banseiki/pull/29",
+      "date": "2026-09-29T09:41:47Z",
+      "title": "日本マップを1534年の開始状態にする（22勢力・56都市、15 km・20 km）",
+      "summary": "日本マップを、SSOT 3.1 の1534年（天文3年5月12日）開始状態で遊べるようにする。15 km と 20 km の固定地図を生成し、万世紀ルールセットでだけ選べる。",
+      "technologies": [
+        "rust",
+        "lua"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:410",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 410,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/410",
+      "date": "2026-07-11T16:05:50Z",
+      "title": "ポップアップが閉じてもクリップボード自動クリアが発火するよう service worker + offscreen 経由に堅牢化 (#401)",
+      "summary": "MV3 ポップアップは、フォーカスを失って閉じると JS コンテキスト（＝保留中の setTimeout）が破棄される。典型フロー（パスワードをコピー → 対象ページをクリックして貼付でポップアップが閉じる）では #399 の copyTextWithAutoClear の 30s クリアタイマーが発火せず、平文が OS クリップボードに残留し続けていた。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:406",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 406,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/406",
+      "date": "2026-07-11T16:00:51Z",
+      "title": "neutralize CSV formula injection and export all categories (#392)",
+      "summary": "デスクトップの実 CSV エクスポートは Rust の export_onepassword_csv（crates/passshare-core）を通るため、#324 で TS 側（shared/lib/csv-export.ts）にのみ適用された 2 つの対策が Rust 側で未修正のままだった。本 PR で等価な対策を適用する。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:402",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 402,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/402",
+      "date": "2026-07-11T15:18:23Z",
+      "title": "add ru docs content catalog + MUST-locale completeness guard (#395)",
+      "summary": "Web ドキュメント本文カタログ（/docs /faq ユーザーガイド /terms /privacy）は ja / en のみで、MUST ロケール ru（ヘッダー言語スイッチャーに常時表示）を開くと無言で英語にフォールバックしていた問題を修正する。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:404",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 404,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/404",
+      "date": "2026-07-11T15:14:20Z",
+      "title": "localize content-script autofill/save UI and fix listbox a11y (#396)",
+      "summary": "@",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:403",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 403,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/403",
+      "date": "2026-07-11T15:11:17Z",
+      "title": "zeroize PasswordBox plaintext on Drop, not only lock() (#391)",
+      "summary": "PasswordBox に Drop 実装が無かったため、lock() を経由しない drop 経路（desktop の state 置換、パニック巻き戻し、プロセス終了）で復号済み平文（Item.fields[].value、recovery_secret）がゼロ化されずに解放され、解放後ヒープに平文が残留していた（#391, #313 のフォローアップ）。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:400",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 400,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/400",
+      "date": "2026-07-11T14:26:54Z",
+      "title": "persist .pbox atomically to prevent password loss on interrupted write",
+      "summary": ".pbox はユーザーの全パスワードを保持する**唯一のコピー**だが、保存が in-place の fs::write（truncate → write）で行われており、書き込み中断（クラッシュ / 電源断 / ディスクフル / OOM kill）で部分ファイルが残り、次回 load_from_path が失敗して**全項目が復旧不能**になるリスクがあった（#390）。デスクトップの全変更操作（add/update/delete/…",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:399",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 399,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/399",
+      "date": "2026-07-11T14:23:54Z",
+      "title": "クリップボードコピーに自動クリアを追加しクロスクライアントのパリティを回復 (#394)",
+      "summary": "@",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:398",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 398,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/398",
+      "date": "2026-07-11T14:21:40Z",
+      "title": "rate-limit /signup and /token/refresh per-IP (#393)",
+      "summary": "POST /api/auth/signup にレート制限が一切なく、未認証の匿名リクエストで無制限に叩けた（#393）。signup はリクエストごとに意図的に高コストな Argon2id ハッシュ（64 MiB / parallelism 4 / timeCost 3）を実行し user/vault/membership/session/connect-token を生成するため、増幅型の CPU/メモリ枯渇（DoS）とストレージ枯…",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:389",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 389,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/389",
+      "date": "2026-07-11T13:21:54Z",
+      "title": "mitigate Railway cold-start transient 503 (frontend retry + backend pool warm-up)",
+      "summary": "Railway バックエンドのコールドスタート（アイドル復帰 / 再デプロイ直後）時、healthy replica が存在しない一瞬の窓でエッジ（railway-hikari）が /api/auth/csrf に transient 503 を返し、ユーザに Failed to fetch が見える事象（#368）を、アプリ側で可能な範囲で緩和する。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:384",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 384,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/384",
+      "date": "2026-07-11T12:26:10Z",
+      "title": "auto-push local one-sided edits via merge-base tracking (#382)",
+      "summary": "Issue #382（#363 / PR #381 のフォローアップ）を解消する。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:381",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 381,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/381",
+      "date": "2026-07-11T11:28:50Z",
+      "title": "auto-resolve one-sided edits and dedupe token bootstrap (#363)",
+      "summary": "Issue #363 の 2 点を解消する。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:380",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 380,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/380",
+      "date": "2026-07-11T11:14:49Z",
+      "title": "point default web origin fallback to live custom domain (#374)",
+      "summary": "正規 Vercel エイリアス https://pass-share-frontend.vercel.app が 404 (DEPLOYMENT_NOT_FOUND) となる一方、DEFAULT_VERCEL_ORIGIN とドキュメントがその実体不在ホストを参照していた不整合を解消する（#374）。本番フロントの実体は WEB_ORIGIN のカスタムドメイン https://pass-share.bm1314.net（curl で…",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:379",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 379,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/379",
+      "date": "2026-07-11T10:31:52Z",
+      "title": "verify DB TLS cert, gate /metrics auth, bound login-guard memory (#323)",
+      "summary": "#323（backend review roundup — Medium/Low）の未対応分を実装する。既対応: 1PUX zip-bomb (#339)、409 dup item + DB error redaction + upload cap (#334)、XFF trust-proxy (#316)。本 PR は残る 3 点を扱う。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:377",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 377,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/377",
+      "date": "2026-07-11T10:26:06Z",
+      "title": "distinguish unsupported payload version from corruption (#322)",
+      "summary": "issue #322（chore(rust) review roundup）の**最後の残タスク**である「復号済みペイロードの unsupported version と corruption の区別」を実装しました。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:376",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 376,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/376",
+      "date": "2026-07-11T09:52:31Z",
+      "title": "single biometric prompt with i18n reason, and surface PIN-set errors (#362)",
+      "summary": "Closes #362. Split from #324.",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:375",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 375,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/375",
+      "date": "2026-07-11T09:52:26Z",
+      "title": "differentiate cloud-sync errors and show per-item progress (#361)",
+      "summary": "Issue #361 の対応。デスクトップのクラウド同期は、これまで全ての失敗（認証 / ネットワーク / サーバー）を単一の汎用メッセージに集約し、さらに途中で失敗すると同期全体を中断してローカルとクラウドが無言で乖離していました。本 PR はエラー種別の判別、項目単位の進捗表示、部分的な失敗の明示を導入します。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:373",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 373,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/373",
+      "date": "2026-07-11T05:58:47Z",
+      "title": "eliminate N+1 credential lookup on password focus (#360)",
+      "summary": "Fixes #360. パスワードフィールドの focusin ごとに全 vault × 全 item を getItem（完全復号）していた N+1 を解消する。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:372",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 372,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/372",
+      "date": "2026-07-11T05:54:17Z",
+      "title": "trust truncated Vercel preview URLs via team-slug binding (#358)",
+      "summary": "Fixes #358 — PR #345（#315 修正）のフォローアップ。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:370",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 370,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/370",
+      "date": "2026-07-10T14:51:53Z",
+      "title": "harden mobile secret-at-rest — no plaintext fallback + salted KDF PIN (#321)",
+      "summary": "Issue #321 (H9) のモバイル secret-at-rest 問題を修正します。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:369",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 369,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/369",
+      "date": "2026-07-10T14:48:40Z",
+      "title": "derive login-throttle client IP from trusted proxy hops (#316)",
+      "summary": "per-IP ログインスロットル（PS029, 30回/15分）が X-Forwarded-For スプーフィングで回避できる問題（High）を修正。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:364",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 364,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/364",
+      "date": "2026-07-10T12:58:05Z",
+      "title": "harden extension autofill and keep note items in CSV export (#324)",
+      "summary": "Part of the #324 review roundup (Medium/Low). This PR takes the self-contained, well-tested clients items; the larger items are split into follow-up issues (below).",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:345",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 345,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/345",
+      "date": "2026-07-10T12:35:21Z",
+      "title": "bind CORS Vercel trust to project prefix (#315)",
+      "summary": "Fixes a High-severity CORS vulnerability (#315): the backend trusted any *.vercel.app origin with credentials, so an attacker could deploy evil.vercel.app and become a fully trusted credentialed CORS origin — exposing t…",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:344",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 344,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/344",
+      "date": "2026-07-03T23:53:31Z",
+      "title": "use the shared password generator (#324)",
+      "summary": "Replaces the extension''s bespoke password generator with a thin re-export of @shared/lib/password-generator, so web, mobile, and the extension all use one implementation.",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:342",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 342,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/342",
+      "date": "2026-07-03T23:02:40Z",
+      "title": "percent-encode URL path segments (#322)",
+      "summary": "Percent-encodes vault/item identifiers before interpolating them into Connect API request paths.",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:341",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 341,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/341",
+      "date": "2026-07-03T22:33:49Z",
+      "title": "distinguish serialize bugs from corrupt input in error mapping (#322)",
+      "summary": "Removes the blanket From for PassShareError and maps each serde_json call site explicitly.",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:339",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 339,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/339",
+      "date": "2026-07-03T21:41:14Z",
+      "title": "cap 1PUX decompressed size to prevent zip-bomb OOM (#323)",
+      "summary": "Bounds the decompressed size of the JSON entry read from a 1PUX ZIP so a \"zip bomb\" can't OOM the backend.",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:338",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 338,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/338",
+      "date": "2026-07-03T21:20:58Z",
+      "title": "consolidate password generator into @shared (#324)",
+      "summary": "Consolidates the web frontend and mobile app \"generate password\" logic into a single @shared/lib/password-generator module.",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:336",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 336,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/336",
+      "date": "2026-07-03T19:48:03Z",
+      "title": "neutralize CSV formula injection in export (#324)",
+      "summary": "neutralize CSV formula injection in export (#324)",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:334",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 334,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/334",
+      "date": "2026-07-03T19:08:34Z",
+      "title": "review roundup — 409 dup item, DB error redaction, upload cap (#323)",
+      "summary": "review roundup — 409 dup item, DB error redaction, upload cap (#323)",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:333",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 333,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/333",
+      "date": "2026-07-03T18:48:19Z",
+      "title": "security hardening from review roundup (#322)",
+      "summary": "security hardening from review roundup (#322)",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:331",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 331,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/331",
+      "date": "2026-07-03T18:03:14Z",
+      "title": "revoke connect tokens on logout and member removal (#317)",
+      "summary": "レビュー #326 で High と判定した connect-token のライフサイクル問題（ログアウト/メンバー削除後もトークンが有効）を修正する。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:330",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 330,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/330",
+      "date": "2026-07-03T17:38:49Z",
+      "title": "pin acceptVaultInvitation transaction to one connection (#314)",
+      "summary": "レビュー #326 で High と判定した、acceptVaultInvitation のトランザクションが pool 経由で発行され原子性を欠く問題を修正する。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:327",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 327,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/327",
+      "date": "2026-07-03T16:51:49Z",
+      "title": "honor stored KDF params + zeroize plaintext at rest (#313)",
+      "summary": "コードベース全体レビュー（#326）で High と判定した crypto at-rest ハイグリーンを修正する。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:310",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 310,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/310",
+      "date": "2026-07-03T15:19:25Z",
+      "title": "bump vite to ^8.0.16 for GHSA-fx2h-pf6j-xcff (#307)",
+      "summary": "security-audit.yml の pnpm-audit が 4 パッケージで fail していたのを解消する。原因は vite の high advisory **GHSA-fx2h-pf6j-xcff**（server.fs.deny bypass on Windows alternate paths、patched \u003e=8.0.16）。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:309",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 309,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/309",
+      "date": "2026-07-03T14:59:38Z",
+      "title": "resolve cargo-audit advisory failures (#308)",
+      "summary": "cargo audit（quality-gate.yml Security audit / security-audit.yml cargo-audit）が新規公開の RustSec advisory 3 件で fail していたのを解消する。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:219",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 219,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/219",
+      "date": "2026-05-30T13:15:35Z",
+      "title": "op-cli Docker Connect E2E (#209)",
+      "summary": "Closes #209",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:220",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 220,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/220",
+      "date": "2026-05-30T13:02:58Z",
+      "title": "dev seed instead of prd replica refresh on deploy-dev",
+      "summary": "main マージ時の dev デプロイで prd DB をコピーしていた誤った設計をやめ、local / preview / dev 向けに共通 dev seed を導入する。stg の prd レプリカ refresh のみ pg_restore 失敗対策を入れる。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:218",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 218,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/218",
+      "date": "2026-05-30T09:06:24Z",
+      "title": "Railway preview deploy stability (#208)",
+      "summary": "Closes #208",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:217",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 217,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/217",
+      "date": "2026-05-30T08:32:19Z",
+      "title": "staging Web UI smoke (#207)",
+      "summary": "Closes #207",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:216",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 216,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/216",
+      "date": "2026-05-30T08:25:03Z",
+      "title": "Web local E2E runbook (#206)",
+      "summary": "Closes #206",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:186",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 186,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/186",
+      "date": "2026-05-30T02:45:23Z",
+      "title": "PassShare Share — vault invitations and member ACL",
+      "summary": "Closes #100",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:184",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 184,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/184",
+      "date": "2026-05-29T14:55:05Z",
+      "title": "deploy-dev DB replica via DATABASE_PUBLIC_URL",
+      "summary": "Closes #183",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:181",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 181,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/181",
+      "date": "2026-05-29T14:33:51Z",
+      "title": "landing header login link and Download CTA dedup",
+      "summary": "Closes #180",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:179",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 179,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/179",
+      "date": "2026-05-29T14:18:41Z",
+      "title": "Pencil multilingual design validation",
+      "summary": "Pencil multilingual design validation",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:170",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 170,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/170",
+      "date": "2026-05-29T13:14:27Z",
+      "title": "Epic #38 multilingual support (ja/en/ru + l10n)",
+      "summary": "Closes #38 Closes #117 Closes #118 Closes #119 Closes #120 Closes #121 Closes #122 Closes #123 Closes #124 Closes #125 Closes #126 Closes #127 Closes #128 Closes #129 Closes #131",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:174",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 174,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/174",
+      "date": "2026-05-29T13:06:06Z",
+      "title": "main triggers dev deploy, manual stg/prd with DB replica",
+      "summary": "main → dev 自動デプロイ + stg/prd 手動化 + DB レプリカ refresh。ADR 005 と Spec が揃っており、Quality gate pass。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:171",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 171,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/171",
+      "date": "2026-05-29T12:57:18Z",
+      "title": "Railway deploy retry and DB smoke",
+      "summary": "Railway deploy retry and DB smoke",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:169",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 169,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/169",
+      "date": "2026-05-28T09:13:37Z",
+      "title": "Epic #37 docs, legal pages, and operations runbooks (#111-#116)",
+      "summary": "Epic #37 docs, legal pages, and operations runbooks (#111-#116)",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:156",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 156,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/156",
+      "date": "2026-05-28T07:41:07Z",
+      "title": "Epic #36 quality gate and release pipeline (#104-#110)",
+      "summary": "Epic #36 quality gate and release pipeline (#104-#110)",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:155",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 155,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/155",
+      "date": "2026-05-28T07:07:01Z",
+      "title": "Epic #35 sync and migration (#98-#103)",
+      "summary": "Closes #98 Closes #99 Closes #101 Closes #102 Closes #103",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:152",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 152,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/152",
+      "date": "2026-05-28T06:42:22Z",
+      "title": "Epic #34 Browser extension (#87-#97)",
+      "summary": "Closes #34 Closes #87 Closes #88 Closes #89 Closes #90 Closes #91 Closes #92 Closes #93 Closes #94 Closes #95 Closes #96 Closes #97",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:151",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 151,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/151",
+      "date": "2026-05-28T05:43:53Z",
+      "title": "Epic #33 Mobile app (#78-#86)",
+      "summary": "Closes #33 Closes #78 Closes #79 Closes #80 Closes #81 Closes #82 Closes #83 Closes #84 Closes #85 Closes #86",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:150",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 150,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/150",
+      "date": "2026-05-28T04:39:24Z",
+      "title": "Epic #32 Desktop production (#70-#77)",
+      "summary": "Closes #32 Closes #70 Closes #71 Closes #72 Closes #73 Closes #74 Closes #75 Closes #76 Closes #77",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:148",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 148,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/148",
+      "date": "2026-05-28T03:46:23Z",
+      "title": "Epic #31 Web complete version (#60-#69)",
+      "summary": "Closes #31 Closes #60 Closes #61 Closes #62 Closes #63 Closes #64 Closes #65 Closes #66 Closes #67 Closes #68 Closes #69",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:147",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 147,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/147",
+      "date": "2026-05-28T03:25:34Z",
+      "title": "Epic #30 Connect API production (#51-#59)",
+      "summary": "Closes #30 Closes #51 Closes #52 Closes #53 Closes #54 Closes #55 Closes #56 Closes #57 Closes #58 Closes #59",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:144",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 144,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/144",
+      "date": "2026-05-28T03:07:12Z",
+      "title": "Epic #29 auth security — clipboard, biometric, audit",
+      "summary": "Epic #29（認証・セキュリティ）の残り子 Issue #48–#50 を実装し、#42–#47 と合わせて Epic 完了ドキュメントを整備します。",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:141",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 141,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/141",
+      "date": "2026-05-27T14:27:11Z",
+      "title": "CSP, HSTS, and Vercel-only CORS (#46)",
+      "summary": "Closes #46",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:140",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 140,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/140",
+      "date": "2026-05-27T14:16:47Z",
+      "title": "login rate limiting and account lockout",
+      "summary": "Closes #45",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:139",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 139,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/139",
+      "date": "2026-05-27T14:15:36Z",
+      "title": "Web session management (CSRF)",
+      "summary": "Rebased onto main after #135 and #138 merge.",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:138",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 138,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/138",
+      "date": "2026-05-27T14:14:36Z",
+      "title": "Connect API multi-user authorization",
+      "summary": "Recreated after #135 merge. Closes #43",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:135",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 135,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/135",
+      "date": "2026-05-27T14:12:05Z",
+      "title": "user auth API (signup/login/logout)",
+      "summary": "Closes #42",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:26",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 26,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/26",
+      "date": "2026-05-27T13:01:13Z",
+      "title": "category Item UI for Desktop Phase 4 (#13)",
+      "summary": "Part of #9 (1Password Connect 互換 Epic)",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:25",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 25,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/25",
+      "date": "2026-05-27T12:53:37Z",
+      "title": "op CLI and Connect SDKs (Phase 3 / #12)",
+      "summary": "Part of #9 (1Password Connect 互換 Epic)",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:24",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 24,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/24",
+      "date": "2026-05-27T12:42:54Z",
+      "title": "Connect API REST on backend (Phase 2)",
+      "summary": "Connect API REST on backend (Phase 2)",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:23",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 23,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/23",
+      "date": "2026-05-27T12:26:11Z",
+      "title": "Epic #9 SSOT + Phase 1 Connect domain model",
+      "summary": "Epic #9 SSOT + Phase 1 Connect domain model",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:22",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 22,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/22",
+      "date": "2026-05-27T12:21:14Z",
+      "title": "add i18n, search shortcut, and matrix background",
+      "summary": "Closes #8",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:21",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 21,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/21",
+      "date": "2026-05-27T12:16:05Z",
+      "title": "polish desktop password box operation UI",
+      "summary": "Closes #7",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:20",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 20,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/20",
+      "date": "2026-05-27T12:11:54Z",
+      "title": "migrate desktop UI to React + Vite",
+      "summary": "Closes #6",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:19",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 19,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/19",
+      "date": "2026-05-27T12:07:00Z",
+      "title": "add landing page content sections",
+      "summary": "Closes #5",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:17",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 17,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/17",
+      "date": "2026-05-27T11:55:32Z",
+      "title": "Web ランディングページ シェル UI（Header / Hero / Footer）",
+      "summary": "Closes #4",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:16",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 16,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/16",
+      "date": "2026-05-27T11:47:06Z",
+      "title": "参照サイト準拠のデザインシステム（トークン・共通スタイル）",
+      "summary": "Closes #3",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:15",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 15,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/15",
+      "date": "2026-05-27T11:39:55Z",
+      "title": "automate Vercel Preview env sync",
+      "summary": "Closes #1",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:14",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 14,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/14",
+      "date": "2026-05-27T11:20:23Z",
+      "title": "Railway production deploy from repo root",
+      "summary": "Closes #1",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:pull:2",
+      "kind": "pull",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 2,
+      "url": "https://github.com/AutoDevJapan/PassShare/pull/2",
+      "date": "2026-05-27T11:15:00Z",
+      "title": "Vercel/Railway インフラ再構築 (preview/dev/stg/prd)",
+      "summary": "Closes #1",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1131498455:release:275948252",
+      "kind": "release",
+      "repository": "AutoDevJapan/PassShare",
+      "repository_id": 1131498455,
+      "number": 275948252,
+      "url": "https://github.com/AutoDevJapan/PassShare/releases/tag/v1.1.0",
+      "date": "2026-01-12T09:45:25Z",
+      "title": "PassShare v1.1.0",
+      "summary": "PassShare v1.1.0",
+      "technologies": [
+        "rust",
+        "typescript"
+      ],
+      "tech_source": "repository"
+    }
+  ],
+  "readme_sha256": "9ec4b5d44199b4412fc94f9d837c0b77d2994b5bbafa8fde9a61fe386006a333"
 }
