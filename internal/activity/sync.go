@@ -11,11 +11,13 @@ import (
 )
 
 const Profile = "mashfromband/mashfromband"
+const ProfileRepositoryID int64 = 1221617650
 const ReviewBranch = "automation/public-activity"
 const profileAPI = "/repos/" + Profile
 
 var ErrReviewConflict = errors.New("review branch or PR changed during generation")
 var ErrPRHeadPending = errors.New("accepted review ref has not reached the PR view yet")
+var ErrFormalChecksFailed = errors.New("formal checks failed on review head")
 
 func reviewErrorOutcome(err error) string {
 	if errors.Is(err, ErrReviewConflict) {
@@ -35,6 +37,7 @@ type PR struct {
 	Labels   []label    `json:"labels"`
 	Merged   bool       `json:"merged"`
 	MergedAt *time.Time `json:"merged_at,omitempty"`
+	MergeSHA string     `json:"merge_commit_sha,omitempty"`
 	State    string     `json:"state"`
 	Head     struct {
 		SHA, Ref string
@@ -54,16 +57,18 @@ func (p PR) labelNames() []string {
 }
 
 type SyncResult struct {
-	Outcome         string `json:"outcome"`
-	PR              int    `json:"pr,omitempty"`
-	URL             string `json:"url,omitempty"`
-	Head            string `json:"head,omitempty"`
-	Changed         bool   `json:"changed"`
-	Published       bool   `json:"published"`
-	Entries         int    `json:"entries"`
-	HeadWaits       int    `json:"head_propagation_waits,omitempty"`
-	ReviewCreated   bool   `json:"review_created,omitempty"`
-	UpdateAttempted bool   `json:"update_attempted,omitempty"`
+	Outcome              string `json:"outcome"`
+	PR                   int    `json:"pr,omitempty"`
+	URL                  string `json:"url,omitempty"`
+	Head                 string `json:"head,omitempty"`
+	Changed              bool   `json:"changed"`
+	Published            bool   `json:"published"`
+	PublishedSHA         string `json:"published_sha,omitempty"`
+	PublicationAttempted bool   `json:"publication_attempted,omitempty"`
+	Entries              int    `json:"entries"`
+	HeadWaits            int    `json:"head_propagation_waits,omitempty"`
+	ReviewCreated        bool   `json:"review_created,omitempty"`
+	UpdateAttempted      bool   `json:"update_attempted,omitempty"`
 }
 type remoteInput struct {
 	Readme   []byte
@@ -358,23 +363,27 @@ func (api *Client) publish(ctx context.Context, p PR, parent string, files map[s
 }
 
 type checkRun struct {
+	ID                       int64
 	Name, Status, Conclusion string
-	Head                     string `json:"head_sha"`
+	Head                     string             `json:"head_sha"`
+	Completed                time.Time          `json:"completed_at"`
+	DetailsURL               string             `json:"details_url"`
+	Suite                    struct{ ID int64 } `json:"check_suite"`
 	App                      struct{ ID int64 }
 }
 
 var requiredChecks = []string{"Markdown links", "Python unit tests", "Go activity tests"}
 
-func (api *Client) checks(ctx context.Context, sha string) (bool, bool, error) {
+func (api *Client) checks(ctx context.Context, sha string) ([]checkRun, bool, error) {
 	var result struct {
 		Total int        `json:"total_count"`
 		Runs  []checkRun `json:"check_runs"`
 	}
 	if _, err := api.Call(ctx, "GET", profileAPI+"/commits/"+sha+"/check-runs?per_page=100&filter=latest", nil, &result); err != nil {
-		return false, false, err
+		return nil, false, err
 	}
 	if result.Total > 100 {
-		return false, false, errors.New("check run list incomplete")
+		return nil, false, errors.New("check run list incomplete")
 	}
 	seen := map[string]checkRun{}
 	for _, run := range result.Runs {
@@ -385,9 +394,12 @@ func (api *Client) checks(ctx context.Context, sha string) (bool, bool, error) {
 		}
 	}
 	all, failed := true, false
+	passed := []checkRun{}
 	for _, name := range requiredChecks {
 		r, ok := seen[name]
-		if !ok || r.Status != "completed" {
+		// Required results expire after seven days on GitHub. Refresh before
+		// that boundary, including when an unchanged PR reaches its deadline.
+		if !ok || r.Status != "completed" || r.Completed.IsZero() || r.Completed.Before(time.Now().Add(-167*time.Hour)) || r.Completed.After(time.Now().Add(time.Minute)) {
 			all = false
 			continue
 		}
@@ -395,8 +407,12 @@ func (api *Client) checks(ctx context.Context, sha string) (bool, bool, error) {
 			all = false
 			failed = true
 		}
+		passed = append(passed, r)
 	}
-	return all, failed, nil
+	if !all {
+		passed = nil
+	}
+	return passed, failed, nil
 }
 
 func delay(ctx context.Context, d time.Duration) error {
@@ -409,45 +425,45 @@ func delay(ctx context.Context, d time.Duration) error {
 		return nil
 	}
 }
-func (api *Client) validateHead(ctx context.Context, p PR) error {
-	all, failed, err := api.checks(ctx, p.Head.SHA)
+func (api *Client) validateHead(ctx context.Context, p PR) ([]checkRun, error) {
+	passed, failed, err := api.checks(ctx, p.Head.SHA)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if all {
-		return nil
+	if len(passed) == len(requiredChecks) {
+		return passed, nil
 	}
 	if failed {
-		return errors.New("formal checks failed on review head")
+		return nil, ErrFormalChecksFailed
 	}
 	for _, workflow := range []string{"tests.yml", "profile-readme.yml"} {
 		if _, err = api.Call(ctx, "POST", profileAPI+"/actions/workflows/"+workflow+"/dispatches", map[string]string{"ref": ReviewBranch}, nil); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	for i := 0; i < 60; i++ {
 		if err = api.pause(ctx, 5*time.Second); err != nil {
-			return err
+			return nil, err
 		}
 		current, e := api.getPR(ctx, p.Number)
 		if e != nil {
-			return e
+			return nil, e
 		}
 		if current.Head.SHA != p.Head.SHA {
-			return errors.New("review head changed during validation")
+			return nil, errors.New("review head changed during validation")
 		}
-		all, failed, err = api.checks(ctx, p.Head.SHA)
+		passed, failed, err = api.checks(ctx, p.Head.SHA)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		if all {
-			return nil
+		if len(passed) == len(requiredChecks) {
+			return passed, nil
 		}
 		if failed {
-			return errors.New("formal checks failed on review head")
+			return nil, ErrFormalChecksFailed
 		}
 	}
-	return errors.New("formal checks are not complete yet")
+	return nil, errors.New("formal checks are not complete yet")
 }
 
 // Sync reads source files by immutable SHA and only writes the two generated
@@ -462,10 +478,10 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 	if _, err := api.Call(ctx, "GET", profileAPI, nil, &meta); err != nil {
 		return result, err
 	}
-	if meta.ID != 1221617650 || meta.FullName != Profile || meta.Private == nil || *meta.Private || meta.Visibility != "public" {
+	if meta.ID != ProfileRepositoryID || meta.FullName != Profile || meta.Private == nil || *meta.Private || meta.Visibility != "public" {
 		return result, errors.New("profile repository identity differs")
 	}
-	api.RepositoryIDs[Profile] = 1221617650
+	api.RepositoryIDs[Profile] = ProfileRepositoryID
 	var main struct{ Object struct{ SHA string } }
 	if _, err := api.Call(ctx, "GET", profileAPI+"/git/ref/heads/main", nil, &main); err != nil {
 		return result, err
@@ -604,7 +620,12 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 		return result, nil
 	}
 	result.PR, result.URL, result.Head = p.Number, p.URL, p.Head.SHA
-	if err = api.validateHead(ctx, p); err != nil {
+	passed, err := api.validateHead(ctx, p)
+	if err != nil {
+		result.Outcome = "validation-incomplete"
+		if errors.Is(err, ErrFormalChecksFailed) {
+			result.Outcome = "validation-failed"
+		}
 		return result, err
 	}
 	// Re-read labels and identity after checks, immediately before a fixed-SHA merge.
@@ -614,6 +635,23 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 	}
 	if !validPR(current) || current.Head.SHA != p.Head.SHA {
 		return result, errors.New("review PR changed before publication")
+	}
+	if !Ready(current.Created, current.labelNames(), current.Draft, time.Now().UTC(), reviewDelay) {
+		result.Outcome = "review-held-or-grace-period"
+		return result, nil
+	}
+	if err = api.reportChecks(ctx, p.Head.SHA, passed); err != nil {
+		result.Outcome = "check-report-failed"
+		return result, err
+	}
+	// Status reporting takes network time too. Recheck the publication controls
+	// once more so a late hold or editor change cannot be overlooked.
+	current, err = api.getPR(ctx, p.Number)
+	if err != nil {
+		return result, err
+	}
+	if !validPR(current) || current.Head.SHA != p.Head.SHA {
+		return result, errors.New("review PR changed during check reporting")
 	}
 	if !Ready(current.Created, current.labelNames(), current.Draft, time.Now().UTC(), reviewDelay) {
 		result.Outcome = "review-held-or-grace-period"
@@ -631,15 +669,37 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 		Merged bool
 		SHA    string
 	}
-	if _, err = api.Call(ctx, "PUT", fmt.Sprintf("%s/pulls/%d/merge", profileAPI, p.Number), map[string]string{"sha": p.Head.SHA, "merge_method": "squash"}, &merged); err != nil {
-		return result, err
-	}
-	if !merged.Merged || len(merged.SHA) != 40 {
-		return result, errors.New("GitHub did not confirm review merge")
+	result.PublicationAttempted = true
+	_, err = api.Call(ctx, "PUT", fmt.Sprintf("%s/pulls/%d/merge", profileAPI, p.Number), map[string]string{"sha": p.Head.SHA, "merge_method": "squash"}, &merged)
+	if err != nil || !merged.Merged || len(merged.SHA) != 40 {
+		if err == nil {
+			err = errors.New("GitHub did not confirm review merge")
+		}
+		return api.reconcilePublication(ctx, p, result, err)
 	}
 	result.Outcome = "published"
 	result.Published = true
+	result.PublishedSHA = merged.SHA
 	// Keep the one automation branch for the next cycle. Deleting it after a
 	// separate GET could discard a late editor's commit; later cycles merge main.
 	return result, nil
+}
+
+// A lost response is not proof of rejection. Read once, never repeat a merge.
+// An open read model alone cannot prove that a transport/5xx request failed.
+func (api *Client) reconcilePublication(ctx context.Context, expected PR, result SyncResult, requestErr error) (SyncResult, error) {
+	result.Outcome = "publication-unconfirmed"
+	actual, readErr := api.getPR(ctx, expected.Number)
+	if readErr != nil || actual.Number != expected.Number || actual.Head.Repo.FullName != Profile || actual.Head.Ref != ReviewBranch || actual.Base.Ref != "main" || actual.Head.SHA != expected.Head.SHA {
+		return result, requestErr
+	}
+	if actual.Merged && actual.State == "closed" && actual.MergedAt != nil && len(actual.MergeSHA) == 40 {
+		result.Outcome, result.Published, result.PublishedSHA = "published", true, actual.MergeSHA
+		return result, nil
+	}
+	var rejected *HTTPError
+	if actual.State == "open" && !actual.Merged && actual.MergedAt == nil && errors.As(requestErr, &rejected) && rejected.Status >= 400 && rejected.Status < 500 {
+		result.Outcome = "publication-rejected"
+	}
+	return result, requestErr
 }

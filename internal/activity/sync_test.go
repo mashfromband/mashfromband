@@ -13,33 +13,43 @@ import (
 )
 
 type syncFixture struct {
-	refResponseLost, refReadFails                           bool
-	refWrites                                               int
-	staleViewSHA                                            string
-	checkReads                                              int
-	stalePRReads                                            int
-	editAfterRefWrite                                       bool
-	mainReads, mainChangeAt                                 int
-	mergeConflict                                           bool
-	behind                                                  bool
-	baseMerges                                              int
-	commitParent                                            string
-	t                                                       *testing.T
-	client                                                  *Client
-	pr                                                      PR
-	data                                                    Data
-	readme                                                  string
-	excluded                                                []Exclusion
-	fresh                                                   bool
-	failFetch                                               bool
-	holdOnRead                                              bool
-	writeRace                                               bool
-	commits, created, merges, deletes, mutations            int
-	writtenData                                             Data
-	writtenReadme                                           string
-	branchExists, closedReview, closedMerged, pendingChecks bool
-	branchSHA, extraPath                                    string
-	dispatches                                              map[string]int
+	mergeStatus, mergeAttempts, pendingSourceReads             int
+	mergeResponseLost, mergeBrokenResponse, mergeReadbackFails bool
+	failedCheck, failCheckRead, onlyLastBad                    bool
+	wrongRunBranch, wrongHeadRepo                              bool
+	wrongRunRepository, wrongRunEvent, wrongDetailsURL         bool
+	afterStatuses                                              func()
+	requireCommitStatuses, staleChecks                         bool
+	wrongWorkflow, wrongRunHead, failedSourceRun               bool
+	statusFailure                                              bool
+	statusReports                                              []map[string]string
+	refResponseLost, refReadFails                              bool
+	refWrites                                                  int
+	staleViewSHA                                               string
+	checkReads                                                 int
+	stalePRReads                                               int
+	editAfterRefWrite                                          bool
+	mainReads, mainChangeAt                                    int
+	mergeConflict                                              bool
+	behind                                                     bool
+	baseMerges                                                 int
+	commitParent                                               string
+	t                                                          *testing.T
+	client                                                     *Client
+	pr                                                         PR
+	data                                                       Data
+	readme                                                     string
+	excluded                                                   []Exclusion
+	fresh                                                      bool
+	failFetch                                                  bool
+	holdOnRead                                                 bool
+	writeRace                                                  bool
+	commits, created, merges, deletes, mutations               int
+	writtenData                                                Data
+	writtenReadme                                              string
+	branchExists, closedReview, closedMerged, pendingChecks    bool
+	branchSHA, extraPath                                       string
+	dispatches                                                 map[string]int
 }
 
 func newSyncFixture(t *testing.T, existing bool) *syncFixture {
@@ -111,6 +121,10 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 	case p == profileAPI+"/pulls/31/files":
 		sendJSON(w, []map[string]string{{"filename": "README.md", "status": "modified"}, {"filename": DataPath, "status": "modified"}})
 	case p == profileAPI+"/pulls/31":
+		if f.mergeAttempts > 0 && f.mergeReadbackFails {
+			w.WriteHeader(503)
+			return
+		}
 		if f.stalePRReads > 0 {
 			f.stalePRReads--
 			stale := f.pr
@@ -265,24 +279,132 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 	case strings.Contains(p, "/check-runs"):
 		f.checkReads++
+		if f.failCheckRead {
+			w.WriteHeader(503)
+			return
+		}
 		sha := strings.Split(strings.TrimPrefix(p, profileAPI+"/commits/"), "/")[0]
 		runs := []map[string]any{}
-		for _, name := range requiredChecks {
+		for i, name := range requiredChecks {
 			status, conclusion := "completed", "success"
 			if f.pendingChecks && len(f.dispatches) < 2 {
 				status = "queued"
 				conclusion = ""
 			}
-			runs = append(runs, map[string]any{"name": name, "status": status, "conclusion": conclusion, "head_sha": sha, "app": map[string]int{"id": 15368}})
+			if f.failedCheck {
+				conclusion = "failure"
+			}
+			suite := 2
+			if name == "Markdown links" {
+				suite = 1
+			}
+			completed := time.Now().UTC().Add(-time.Minute)
+			if f.staleChecks && len(f.dispatches) < 2 {
+				completed = completed.Add(-8 * 24 * time.Hour)
+			}
+			details := fmt.Sprintf("https://github.com/%s/actions/runs/%d/job/%d", Profile, 10+suite, 100+i)
+			if f.wrongDetailsURL && (!f.onlyLastBad || i == len(requiredChecks)-1) {
+				details = "https://example.test/unrelated"
+			}
+			runs = append(runs, map[string]any{"id": 100 + i, "name": name, "status": status, "conclusion": conclusion, "head_sha": sha, "app": map[string]int{"id": 15368}, "check_suite": map[string]int{"id": suite}, "completed_at": completed, "details_url": details})
 		}
 		sendJSON(w, map[string]any{"total_count": len(runs), "check_runs": runs})
+	case p == profileAPI+"/actions/runs":
+		workflow, id := "tests.yml", 12
+		if r.URL.Query().Get("check_suite_id") == "1" {
+			workflow, id = "profile-readme.yml", 11
+		}
+		if f.wrongWorkflow {
+			workflow = "unrelated.yml"
+		}
+		sha := f.pr.Head.SHA
+		if f.wrongRunHead {
+			sha = strings.Repeat("f", 40)
+		}
+		conclusion := "success"
+		if f.failedSourceRun {
+			conclusion = "failure"
+		}
+		repo := map[string]any{"id": 1221617650, "full_name": Profile}
+		if f.wrongRunRepository {
+			repo = map[string]any{"id": 999, "full_name": "other/repo"}
+		}
+		event := "workflow_dispatch"
+		if f.wrongRunEvent {
+			event = "repository_dispatch"
+		}
+		branch := ReviewBranch
+		if f.wrongRunBranch {
+			branch = "other"
+		}
+		headRepo := repo
+		if f.wrongHeadRepo {
+			headRepo = map[string]any{"id": 999, "full_name": "other/repo"}
+		}
+		status := "completed"
+		if f.pendingSourceReads > 0 && id == 11 {
+			f.pendingSourceReads--
+			status = "in_progress"
+			conclusion = ""
+		}
+		sendJSON(w, map[string]any{"total_count": 1, "workflow_runs": []map[string]any{{"id": id, "event": event, "path": ".github/workflows/" + workflow, "head_sha": sha, "head_branch": branch, "status": status, "conclusion": conclusion, "repository": repo, "head_repository": headRepo}}})
+	case strings.HasPrefix(p, profileAPI+"/commits/") && strings.HasSuffix(p, "/status"):
+		statuses := []map[string]any{}
+		for _, report := range f.statusReports {
+			statuses = append(statuses, map[string]any{"context": report["context"], "state": report["state"], "target_url": report["target_url"]})
+		}
+		sendJSON(w, map[string]any{"statuses": statuses})
+	case strings.HasPrefix(p, profileAPI+"/commits/") && strings.HasSuffix(p, "/statuses"):
+		statuses := []map[string]any{}
+		for i := len(f.statusReports) - 1; i >= 0; i-- {
+			report := f.statusReports[i]
+			statuses = append(statuses, map[string]any{"context": report["context"], "state": report["state"], "target_url": report["target_url"], "creator": map[string]string{"login": "github-actions[bot]"}})
+		}
+		sendJSON(w, statuses)
+	case strings.HasPrefix(p, profileAPI+"/statuses/") && r.Method == "POST":
+		if f.statusFailure {
+			w.WriteHeader(403)
+			return
+		}
+		var report map[string]string
+		_ = json.NewDecoder(r.Body).Decode(&report)
+		if p != profileAPI+"/statuses/"+f.pr.Head.SHA || report["state"] != "success" {
+			f.t.Error("status did not report the validated SHA and result")
+		}
+		f.statusReports = append(f.statusReports, report)
+		if len(f.statusReports) == 3 && f.afterStatuses != nil {
+			f.afterStatuses()
+		}
+		sendJSON(w, map[string]any{"context": report["context"], "state": report["state"], "target_url": report["target_url"], "creator": map[string]string{"login": "github-actions[bot]"}})
 	case p == profileAPI+"/pulls/31/merge":
+		f.mergeAttempts++
+		if f.mergeStatus != 0 {
+			w.WriteHeader(f.mergeStatus)
+			return
+		}
+		if f.requireCommitStatuses && len(f.statusReports) != len(requiredChecks) {
+			w.WriteHeader(405)
+			return
+		}
 		var request struct{ SHA string }
 		_ = json.NewDecoder(r.Body).Decode(&request)
 		if request.SHA != f.pr.Head.SHA {
 			f.t.Error("merge did not pin validated SHA")
 		}
 		f.merges++
+		if f.mergeResponseLost || f.mergeBrokenResponse {
+			f.pr.Merged = true
+			f.pr.State = "closed"
+			at := time.Now().UTC()
+			f.pr.MergedAt = &at
+			f.pr.MergeSHA = strings.Repeat("f", 40)
+			if f.mergeResponseLost {
+				w.WriteHeader(502)
+			} else {
+				_, _ = w.Write([]byte("{"))
+			}
+			return
+		}
 		sendJSON(w, map[string]any{"merged": true, "sha": strings.Repeat("f", 40)})
 	case p == profileAPI+"/git/ref/heads/"+ReviewBranch:
 		if f.refReadFails {
@@ -547,6 +669,177 @@ func TestFormalChecksDispatchAndWaitForSameHead(t *testing.T) {
 	}
 }
 
+// workflow_dispatch job checks are real validation but GitHub does not use them
+// for PR branch protection. Report their verified results via commit statuses.
+func TestDispatchedChecksSatisfyProtectionWithRealEvidence(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.requireCommitStatuses = true
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || !result.Published || len(f.statusReports) != 3 {
+		t.Fatalf("dispatched green checks could not publish: %#v reports=%v err=%v", result, f.statusReports, err)
+	}
+	for i, report := range f.statusReports {
+		if report["context"] != requiredChecks[i] || !strings.Contains(report["target_url"], "/job/") {
+			t.Fatalf("status lost the actual validation evidence: %v", report)
+		}
+	}
+	_, err = Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || len(f.statusReports) != 3 {
+		t.Fatalf("unchanged evidence duplicated statuses: %v %v", f.statusReports, err)
+	}
+}
+
+func TestStatusReportingRejectsUntrustedOrFailedEvidence(t *testing.T) {
+	for _, which := range []string{"workflow", "head", "repository", "head-repository", "branch", "event", "log", "last-log", "source-failed", "report-failed"} {
+		t.Run(which, func(t *testing.T) {
+			f := newSyncFixture(t, true)
+			f.wrongWorkflow = which == "workflow"
+			f.wrongRunHead = which == "head"
+			f.wrongRunRepository = which == "repository"
+			f.wrongHeadRepo = which == "head-repository"
+			f.wrongRunBranch = which == "branch"
+			f.wrongRunEvent = which == "event"
+			f.wrongDetailsURL = which == "log" || which == "last-log"
+			f.onlyLastBad = which == "last-log"
+			f.failedSourceRun = which == "source-failed"
+			f.statusFailure = which == "report-failed"
+			result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+			if err == nil || result.Published || f.merges != 0 || len(f.statusReports) != 0 {
+				t.Fatalf("unverified checks published: %s %#v %v", which, result, err)
+			}
+		})
+	}
+}
+
+func TestPublicationResponseReconciliation(t *testing.T) {
+	for _, which := range []string{"applied-502", "applied-broken-200", "rejected-405", "unknown-502", "readback-failed"} {
+		t.Run(which, func(t *testing.T) {
+			f := newSyncFixture(t, true)
+			f.mergeResponseLost = which == "applied-502" || which == "readback-failed"
+			f.mergeBrokenResponse = which == "applied-broken-200"
+			f.mergeReadbackFails = which == "readback-failed"
+			if which == "rejected-405" {
+				f.mergeStatus = 405
+			}
+			if which == "unknown-502" {
+				f.mergeStatus = 502
+			}
+			result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+			confirmed := which == "applied-502" || which == "applied-broken-200"
+			outcome := "publication-unconfirmed"
+			if confirmed {
+				outcome = "published"
+			}
+			if which == "rejected-405" {
+				outcome = "publication-rejected"
+			}
+			if result.Published != confirmed || (err == nil) != confirmed || result.Outcome != outcome || f.mergeAttempts != 1 || !result.PublicationAttempted {
+				t.Fatalf("publication certainty or single request lost: %s %#v attempts=%d err=%v", which, result, f.mergeAttempts, err)
+			}
+			if confirmed && f.merges != 1 {
+				t.Fatal("positive control did not apply the merge")
+			}
+			if (confirmed && result.PublishedSHA != strings.Repeat("f", 40)) || (!confirmed && result.PublishedSHA != "") {
+				t.Fatalf("unconfirmed merge SHA reported: %#v", result)
+			}
+		})
+	}
+}
+
+func TestSourceWorkflowCompletionHasBoundedWait(t *testing.T) {
+	for _, pending := range []int{2, 99} {
+		t.Run(fmt.Sprint(pending), func(t *testing.T) {
+			f := newSyncFixture(t, true)
+			f.pendingSourceReads = pending
+			waits := 0
+			f.client.pause = func(context.Context, time.Duration) error { waits++; return nil }
+			result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+			if pending == 2 {
+				if err != nil || !result.Published || waits != 2 || len(f.statusReports) != 3 {
+					t.Fatalf("known source completion lag was not recovered: %#v waits=%d %v", result, waits, err)
+				}
+			} else if err == nil || result.Published || waits != 4 || f.pendingSourceReads != 94 || len(f.statusReports) != 0 || f.merges != 0 {
+				t.Fatalf("source wait was not bounded: %#v waits=%d remaining=%d %v", result, waits, f.pendingSourceReads, err)
+			}
+		})
+	}
+}
+
+func TestValidationIncompleteIsNotReportedAsFailedCheck(t *testing.T) {
+	for _, which := range []string{"failed", "read-failed", "wait-interrupted"} {
+		t.Run(which, func(t *testing.T) {
+			f := newSyncFixture(t, true)
+			f.failedCheck = which == "failed"
+			f.failCheckRead = which == "read-failed"
+			f.pendingChecks = which == "wait-interrupted"
+			f.client.pause = func(context.Context, time.Duration) error { return errors.New("interrupted validation wait") }
+			result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+			expected := "validation-incomplete"
+			if which == "failed" {
+				expected = "validation-failed"
+			}
+			if err == nil || result.Outcome != expected || result.Published || f.merges != 0 || len(f.statusReports) != 0 {
+				t.Fatalf("validation certainty lost: %s %#v %v", which, result, err)
+			}
+		})
+	}
+}
+
+func TestReportChecksVerifiesEveryIdentityBeforeWriting(t *testing.T) {
+	for _, which := range []string{"valid", "sha", "app"} {
+		t.Run(which, func(t *testing.T) {
+			f := newSyncFixture(t, true)
+			passed, failed, err := f.client.checks(context.Background(), f.pr.Head.SHA)
+			if err != nil || failed || len(passed) != 3 {
+				t.Fatalf("invalid positive control: %v %v", passed, err)
+			}
+			if which == "sha" {
+				passed[2].Head = strings.Repeat("f", 40)
+			}
+			if which == "app" {
+				passed[2].App.ID = 999
+			}
+			err = f.client.reportChecks(context.Background(), f.pr.Head.SHA, passed)
+			if which == "valid" {
+				if err != nil || len(f.statusReports) != 3 {
+					t.Fatalf("positive report failed: %v", err)
+				}
+			} else if err == nil || len(f.statusReports) != 0 {
+				t.Fatalf("third invalid identity allowed partial reporting: %v %v", f.statusReports, err)
+			}
+		})
+	}
+}
+
+func TestPublicationControlsAreRecheckedAfterStatusReporting(t *testing.T) {
+	for _, which := range []string{"hold", "edit"} {
+		t.Run(which, func(t *testing.T) {
+			f := newSyncFixture(t, true)
+			f.afterStatuses = func() {
+				if which == "hold" {
+					f.pr.Labels = []label{{Name: "hold"}}
+				} else {
+					f.pr.Head.SHA = strings.Repeat("d", 40)
+				}
+			}
+			result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+			if result.Published || f.merges != 0 || len(f.statusReports) != 3 || (which == "hold" && (err != nil || result.Outcome != "review-held-or-grace-period")) || (which == "edit" && err == nil) {
+				t.Fatalf("late publication control was ignored: %s %#v %v", which, result, err)
+			}
+		})
+	}
+}
+
+func TestExpiredChecksAreRefreshedBeforePublication(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.staleChecks = true
+	f.client.pause = func(context.Context, time.Duration) error { return nil }
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || !result.Published || len(f.dispatches) != 2 || len(f.statusReports) != 3 {
+		t.Fatalf("old checks reused past GitHub's seven-day validity: %#v %v", result, err)
+	}
+}
+
 func TestHeadChangeDuringDispatchedChecksCannotPublish(t *testing.T) {
 	f := newSyncFixture(t, true)
 	f.pendingChecks = true
@@ -614,7 +907,7 @@ func TestSyncFailureKeepsRemoteFilesAndNeverPublishes(t *testing.T) {
 }
 
 func TestChecksCannotUseAnotherSHAOrAnotherApp(t *testing.T) {
-	for _, which := range []string{"sha", "app"} {
+	for _, which := range []string{"valid", "sha", "app"} {
 		t.Run(which, func(t *testing.T) {
 			api := serveClient(t, func(w http.ResponseWriter, r *http.Request) {
 				runs := []map[string]any{}
@@ -623,16 +916,20 @@ func TestChecksCannotUseAnotherSHAOrAnotherApp(t *testing.T) {
 					app := int64(15368)
 					if which == "sha" {
 						sha = strings.Repeat("b", 40)
-					} else {
+					} else if which == "app" {
 						app = 999
 					}
-					runs = append(runs, map[string]any{"name": name, "head_sha": sha, "app": map[string]int64{"id": app}, "status": "completed", "conclusion": "success"})
+					runs = append(runs, map[string]any{"name": name, "head_sha": sha, "app": map[string]int64{"id": app}, "status": "completed", "conclusion": "success", "completed_at": time.Now().UTC().Add(-time.Minute)})
 				}
 				sendJSON(w, map[string]any{"total_count": 3, "check_runs": runs})
 			})
-			ok, _, err := api.checks(context.Background(), strings.Repeat("a", 40))
-			if err != nil || ok {
-				t.Fatalf("wrong check provenance accepted %v %v", ok, err)
+			passed, _, err := api.checks(context.Background(), strings.Repeat("a", 40))
+			want := 0
+			if which == "valid" {
+				want = 3
+			}
+			if err != nil || len(passed) != want {
+				t.Fatalf("wrong check provenance accepted %v %v", passed, err)
 			}
 		})
 	}

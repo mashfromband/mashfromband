@@ -85,6 +85,7 @@ jobs:
       pull-requests: write
       actions: write
       checks: read
+      statuses: write
     env:
       GITHUB_TOKEN: ${{ github.token }}
       GITHUB_EVENT_NAME: ${{ github.event_name }}

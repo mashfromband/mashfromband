@@ -19,6 +19,15 @@ import (
 
 var ErrNotFound = errors.New("GitHub resource not found")
 
+type HTTPError struct {
+	Method string
+	Status int
+}
+
+func (e *HTTPError) Error() string {
+	return fmt.Sprintf("GitHub %s failed (HTTP %d)", e.Method, e.Status)
+}
+
 type Client struct {
 	attemptedHead string
 	headWaits     int
@@ -79,7 +88,7 @@ func (c *Client) Call(ctx context.Context, method, path string, body any, out an
 		return nil, ErrNotFound
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("GitHub %s failed (HTTP %d)", method, resp.StatusCode)
+		return nil, &HTTPError{Method: method, Status: resp.StatusCode}
 	}
 	if out != nil {
 		b, err := io.ReadAll(io.LimitReader(resp.Body, 32*1024*1024+1))
