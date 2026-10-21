@@ -48,6 +48,7 @@ type SyncResult struct {
 	Changed   bool   `json:"changed"`
 	Published bool   `json:"published"`
 	Entries   int    `json:"entries"`
+	HeadWaits int    `json:"head_propagation_waits,omitempty"`
 }
 type remoteInput struct {
 	Readme   []byte
@@ -270,10 +271,46 @@ func (api *Client) createReview(ctx context.Context, sha string) (PR, error) {
 	if err != nil {
 		return p, err
 	}
-	if !validPR(p) || p.Head.SHA != sha {
-		return p, errors.New("created review PR did not match expected head")
+	if !validPR(p) {
+		return p, errors.New("created review PR identity differs")
 	}
-	return p, nil
+	if p.Head.SHA == sha {
+		return p, nil
+	}
+	return api.awaitPRHead(ctx, p, sha)
+}
+
+// The git ref update is authoritative, but GitHub's PR read model can lag it.
+// Wait for that view only while the live ref still equals our accepted write.
+// A different ref is an editor's change: stop without retrying any write.
+func (api *Client) awaitPRHead(ctx context.Context, p PR, expected string) (PR, error) {
+	for attempt := 0; attempt < 10; attempt++ {
+		current, err := api.getPR(ctx, p.Number)
+		if err != nil {
+			return p, err
+		}
+		if !validPR(current) {
+			return current, errors.New("review PR identity changed after ref update")
+		}
+		if current.Head.SHA == expected {
+			return current, nil
+		}
+		var ref struct{ Object struct{ SHA string } }
+		if _, err = api.Call(ctx, "GET", profileAPI+"/git/ref/heads/"+ReviewBranch, nil, &ref); err != nil {
+			return current, err
+		}
+		if ref.Object.SHA != expected {
+			return current, errors.New("review branch was edited after generation; preserve the new ref")
+		}
+		api.headWaits++
+		if attempt < 9 {
+			if err = api.pause(ctx, time.Second); err != nil {
+				return current, err
+			}
+		}
+		p = current
+	}
+	return p, errors.New("accepted review ref has not reached the PR view yet; retry without rewriting")
 }
 
 func (api *Client) publish(ctx context.Context, p PR, parent string, files map[string]string, existingBranch bool) (PR, error) {
@@ -292,17 +329,11 @@ func (api *Client) publish(ctx context.Context, p PR, parent string, files map[s
 	if err != nil {
 		return p, err
 	}
+	api.writtenHead = sha
 	if p.Number == 0 {
 		return api.createReview(ctx, sha)
 	}
-	p, err = api.getPR(ctx, p.Number)
-	if err != nil {
-		return p, err
-	}
-	if !validPR(p) || p.Head.SHA != sha {
-		return p, errors.New("published review PR did not match expected head")
-	}
-	return p, nil
+	return api.awaitPRHead(ctx, p, sha)
 }
 
 type checkRun struct {
@@ -403,6 +434,8 @@ func (api *Client) validateHead(ctx context.Context, p PR) error {
 // survive; concurrent edits are rejected by a non-force reference update.
 func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDelay time.Duration) (SyncResult, error) {
 	result := SyncResult{Outcome: "unchanged"}
+	api.headWaits = 0
+	api.writtenHead = ""
 	var meta publicRepo
 	if _, err := api.Call(ctx, "GET", profileAPI, nil, &meta); err != nil {
 		return result, err
@@ -512,6 +545,14 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 	}
 	if changed {
 		p, err = api.publish(ctx, p, parent, map[string]string{"README.md": readme, DataPath: string(Encode(data))}, existingBranch)
+		result.HeadWaits = api.headWaits
+		if api.writtenHead != "" {
+			result.Changed = true
+			result.Head = api.writtenHead
+			result.PR = p.Number
+			result.URL = p.URL
+			result.Outcome = "review-update-pending"
+		}
 		if err != nil {
 			return result, err
 		}
@@ -519,6 +560,7 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 		result.Outcome = "review-updated"
 	} else if p.Number == 0 && pending {
 		p, err = api.createReview(ctx, parent)
+		result.HeadWaits = api.headWaits
 		if err != nil {
 			return result, err
 		}

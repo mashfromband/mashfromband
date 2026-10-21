@@ -20,6 +20,8 @@ import (
 var ErrNotFound = errors.New("GitHub resource not found")
 
 type Client struct {
+	headWaits     int
+	writtenHead   string
 	TrustedMain   string
 	Base, Token   string
 	HTTP          *http.Client

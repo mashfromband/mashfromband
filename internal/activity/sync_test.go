@@ -12,6 +12,8 @@ import (
 )
 
 type syncFixture struct {
+	stalePRReads                                            int
+	editAfterRefWrite                                       bool
 	mainReads, mainChangeAt                                 int
 	mergeConflict                                           bool
 	behind                                                  bool
@@ -104,6 +106,13 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 	case p == profileAPI+"/pulls/31/files":
 		sendJSON(w, []map[string]string{{"filename": "README.md", "status": "modified"}, {"filename": DataPath, "status": "modified"}})
 	case p == profileAPI+"/pulls/31":
+		if f.stalePRReads > 0 {
+			f.stalePRReads--
+			stale := f.pr
+			stale.Head.SHA = strings.Repeat("b", 40)
+			sendJSON(w, stale)
+			return
+		}
 		if f.holdOnRead {
 			f.pr.Labels = []label{{Name: "hold"}}
 		}
@@ -230,6 +239,11 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		f.branchSHA = update.SHA
 		f.data = f.writtenData
 		f.readme = f.writtenReadme
+		if f.editAfterRefWrite {
+			f.branchSHA = strings.Repeat("d", 40)
+			f.pr.Head.SHA = f.branchSHA
+			f.data.Entries[0].Title = "late editorial change"
+		}
 		w.WriteHeader(200)
 	case strings.Contains(p, "/check-runs"):
 		sha := strings.Split(strings.TrimPrefix(p, profileAPI+"/commits/"), "/")[0]
@@ -360,6 +374,48 @@ func TestMainAdvanceCannotPublishAnOlderGeneration(t *testing.T) {
 	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
 	if err != nil || result.Outcome != "base-changed-retry" || result.Published || f.merges != 0 {
 		t.Fatalf("advanced main was ignored: %#v %v", result, err)
+	}
+}
+
+func TestPRHeadPropagationWaitDoesNotRewriteOrLoseEdits(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.fresh = true
+	f.pr.Labels = []label{{Name: "hold"}}
+	f.stalePRReads = 2
+	f.client.pause = func(context.Context, time.Duration) error { return nil }
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || result.PR != 31 || result.Head != strings.Repeat("e", 40) || f.commits != 1 || f.created != 0 || f.merges != 0 {
+		t.Fatalf("PR view lag was not handled: %#v %v", result, err)
+	}
+}
+
+func TestConcurrentEditDuringPRHeadPropagationIsPreserved(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.fresh = true
+	f.pr.Labels = []label{{Name: "hold"}}
+	f.stalePRReads = 2
+	f.editAfterRefWrite = true
+	f.client.pause = func(context.Context, time.Duration) error { return nil }
+	_, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err == nil || f.branchSHA != strings.Repeat("d", 40) || f.data.Entries[0].Title != "late editorial change" || f.commits != 1 || f.merges != 0 {
+		t.Fatalf("concurrent editorial change lost: %v", err)
+	}
+}
+
+func TestPRHeadPropagationIsBoundedAndReportsAcceptedWrite(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.fresh = true
+	f.pr.Labels = []label{{Name: "hold"}}
+	f.stalePRReads = 100
+	f.client.pause = func(context.Context, time.Duration) error { return nil }
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err == nil || !result.Changed || result.Head != strings.Repeat("e", 40) || result.HeadWaits != 10 || f.commits != 1 || f.merges != 0 {
+		t.Fatalf("unbounded or misreported PR propagation: %#v %v", result, err)
+	}
+	f.stalePRReads = 0
+	again, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || again.Changed || f.commits != 1 {
+		t.Fatalf("recovery duplicated a write: %#v %v", again, err)
 	}
 }
 
