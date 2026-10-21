@@ -109,6 +109,22 @@ Public GitHub cards cannot read private repository activity, so this section mir
 
 ---
 
+<!-- PUBLIC-ACTIVITY:START -->
+## Recent Public Work
+
+公開製品の開発記録。更新: 2026-10-21 (UTC)。
+
+対象となる公開活動はまだありません。
+
+## Technology Evidence
+
+公開活動に結び付く技術を、記録が増えた時点で表示します。
+
+技術は変更の `tech:<id>` ラベル、未指定なら公開リポジトリの技術を参照しています。熟練度の評価ではありません。
+<!-- PUBLIC-ACTIVITY:END -->
+
+---
+
 ## Operating Principles
 
 - **Spec is the source of truth**: requirements, acceptance criteria, and implementation stay aligned.
