@@ -54,15 +54,16 @@ func (p PR) labelNames() []string {
 }
 
 type SyncResult struct {
-	Outcome       string `json:"outcome"`
-	PR            int    `json:"pr,omitempty"`
-	URL           string `json:"url,omitempty"`
-	Head          string `json:"head,omitempty"`
-	Changed       bool   `json:"changed"`
-	Published     bool   `json:"published"`
-	Entries       int    `json:"entries"`
-	HeadWaits     int    `json:"head_propagation_waits,omitempty"`
-	ReviewCreated bool   `json:"review_created,omitempty"`
+	Outcome         string `json:"outcome"`
+	PR              int    `json:"pr,omitempty"`
+	URL             string `json:"url,omitempty"`
+	Head            string `json:"head,omitempty"`
+	Changed         bool   `json:"changed"`
+	Published       bool   `json:"published"`
+	Entries         int    `json:"entries"`
+	HeadWaits       int    `json:"head_propagation_waits,omitempty"`
+	ReviewCreated   bool   `json:"review_created,omitempty"`
+	UpdateAttempted bool   `json:"update_attempted,omitempty"`
 }
 type remoteInput struct {
 	Readme   []byte
@@ -329,6 +330,7 @@ func (api *Client) publish(ctx context.Context, p PR, parent string, files map[s
 	if err != nil {
 		return p, err
 	}
+	api.attemptedHead = sha
 	if !existingBranch {
 		if _, err = api.Call(ctx, "POST", profileAPI+"/git/refs", map[string]string{"ref": "refs/heads/" + ReviewBranch, "sha": sha}, nil); err != nil {
 			return p, err
@@ -338,7 +340,15 @@ func (api *Client) publish(ctx context.Context, p PR, parent string, files map[s
 		_, err = api.Call(ctx, "PATCH", profileAPI+"/git/refs/heads/"+ReviewBranch, map[string]any{"sha": sha, "force": false}, nil)
 	}
 	if err != nil {
-		return p, err
+		// An error can mean only the response was lost. Reconcile once against
+		// the authoritative ref; never repeat the create/update request.
+		var ref struct{ Object struct{ SHA string } }
+		if _, readErr := api.Call(ctx, "GET", profileAPI+"/git/ref/heads/"+ReviewBranch, nil, &ref); readErr != nil {
+			return p, fmt.Errorf("ref update outcome is unconfirmed: %w", err)
+		}
+		if ref.Object.SHA != sha {
+			return p, ErrReviewConflict
+		}
 	}
 	api.writtenHead = sha
 	if p.Number == 0 {
@@ -447,6 +457,7 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 	result := SyncResult{Outcome: "unchanged"}
 	api.headWaits = 0
 	api.writtenHead = ""
+	api.attemptedHead = ""
 	var meta publicRepo
 	if _, err := api.Call(ctx, "GET", profileAPI, nil, &meta); err != nil {
 		return result, err
@@ -558,9 +569,10 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 		creatingReview := p.Number == 0
 		p, err = api.publish(ctx, p, parent, map[string]string{"README.md": readme, DataPath: string(Encode(data))}, existingBranch)
 		result.HeadWaits = api.headWaits
-		if api.writtenHead != "" {
-			result.Changed = true
-			result.Head = api.writtenHead
+		if api.attemptedHead != "" {
+			result.UpdateAttempted = true
+			result.Changed = api.writtenHead != ""
+			result.Head = api.attemptedHead
 			result.PR = p.Number
 			result.URL = p.URL
 			result.Outcome = reviewErrorOutcome(err)

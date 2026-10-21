@@ -13,6 +13,8 @@ import (
 )
 
 type syncFixture struct {
+	refResponseLost, refReadFails                           bool
+	refWrites                                               int
 	staleViewSHA                                            string
 	checkReads                                              int
 	stalePRReads                                            int
@@ -219,6 +221,7 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		f.commits++
 		sendJSON(w, map[string]string{"sha": strings.Repeat("e", 40)})
 	case p == profileAPI+"/git/refs":
+		f.refWrites++
 		if f.branchExists {
 			w.WriteHeader(422)
 			return
@@ -227,8 +230,13 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewDecoder(r.Body).Decode(&request)
 		f.branchExists = true
 		f.branchSHA = request.SHA
+		if f.refResponseLost {
+			w.WriteHeader(502)
+			return
+		}
 		w.WriteHeader(201)
 	case p == profileAPI+"/git/refs/heads/"+ReviewBranch && r.Method == "PATCH":
+		f.refWrites++
 		var update struct {
 			Force bool
 			SHA   string
@@ -249,6 +257,10 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 			f.branchSHA = strings.Repeat("d", 40)
 			f.pr.Head.SHA = f.branchSHA
 			f.data.Entries[0].Title = "late editorial change"
+		}
+		if f.refResponseLost {
+			w.WriteHeader(502)
+			return
 		}
 		w.WriteHeader(200)
 	case strings.Contains(p, "/check-runs"):
@@ -273,6 +285,10 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		f.merges++
 		sendJSON(w, map[string]any{"merged": true, "sha": strings.Repeat("f", 40)})
 	case p == profileAPI+"/git/ref/heads/"+ReviewBranch:
+		if f.refReadFails {
+			w.WriteHeader(503)
+			return
+		}
 		if !f.branchExists {
 			w.WriteHeader(404)
 			return
@@ -423,6 +439,38 @@ func TestPRHeadPropagationIsBoundedAndReportsAcceptedWrite(t *testing.T) {
 	again, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
 	if err != nil || again.Changed || f.commits != 1 {
 		t.Fatalf("recovery duplicated a write: %#v %v", again, err)
+	}
+}
+
+func TestAcceptedRefWithLostResponseIsReadBackWithoutRepeatingWrite(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.fresh = true
+	f.pr.Labels = []label{{Name: "hold"}}
+	f.refResponseLost = true
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err != nil || !result.Changed || result.PR != 31 || f.refWrites != 1 || f.commits != 1 {
+		t.Fatalf("accepted ref response loss was mishandled: %#v %v", result, err)
+	}
+}
+
+func TestRef409IsAnEditorialConflictWithExpectedHead(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.fresh = true
+	f.writeRace = true
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if !errors.Is(err, ErrReviewConflict) || result.Outcome != "review-edit-conflict" || result.Head != strings.Repeat("e", 40) || f.refWrites != 1 || f.merges != 0 {
+		t.Fatalf("409 lost its state: %#v %v", result, err)
+	}
+}
+
+func TestRefOutcomeUnreadableReportsUnconfirmedExpectedHead(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.fresh = true
+	f.refResponseLost = true
+	f.refReadFails = true
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if err == nil || result.Outcome != "review-update-unconfirmed" || result.Head != strings.Repeat("e", 40) || f.refWrites != 1 {
+		t.Fatalf("unknown ref outcome was called unchanged: %#v %v", result, err)
 	}
 }
 
