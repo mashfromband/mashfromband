@@ -14,6 +14,19 @@ const Profile = "mashfromband/mashfromband"
 const ReviewBranch = "automation/public-activity"
 const profileAPI = "/repos/" + Profile
 
+var ErrReviewConflict = errors.New("review branch or PR changed during generation")
+var ErrPRHeadPending = errors.New("accepted review ref has not reached the PR view yet")
+
+func reviewErrorOutcome(err error) string {
+	if errors.Is(err, ErrReviewConflict) {
+		return "review-edit-conflict"
+	}
+	if errors.Is(err, ErrPRHeadPending) {
+		return "review-head-pending"
+	}
+	return "review-update-unconfirmed"
+}
+
 type PR struct {
 	Number   int        `json:"number"`
 	URL      string     `json:"html_url"`
@@ -41,14 +54,15 @@ func (p PR) labelNames() []string {
 }
 
 type SyncResult struct {
-	Outcome   string `json:"outcome"`
-	PR        int    `json:"pr,omitempty"`
-	URL       string `json:"url,omitempty"`
-	Head      string `json:"head,omitempty"`
-	Changed   bool   `json:"changed"`
-	Published bool   `json:"published"`
-	Entries   int    `json:"entries"`
-	HeadWaits int    `json:"head_propagation_waits,omitempty"`
+	Outcome       string `json:"outcome"`
+	PR            int    `json:"pr,omitempty"`
+	URL           string `json:"url,omitempty"`
+	Head          string `json:"head,omitempty"`
+	Changed       bool   `json:"changed"`
+	Published     bool   `json:"published"`
+	Entries       int    `json:"entries"`
+	HeadWaits     int    `json:"head_propagation_waits,omitempty"`
+	ReviewCreated bool   `json:"review_created,omitempty"`
 }
 type remoteInput struct {
 	Readme   []byte
@@ -274,9 +288,6 @@ func (api *Client) createReview(ctx context.Context, sha string) (PR, error) {
 	if !validPR(p) {
 		return p, errors.New("created review PR identity differs")
 	}
-	if p.Head.SHA == sha {
-		return p, nil
-	}
 	return api.awaitPRHead(ctx, p, sha)
 }
 
@@ -290,17 +301,17 @@ func (api *Client) awaitPRHead(ctx context.Context, p PR, expected string) (PR, 
 			return p, err
 		}
 		if !validPR(current) {
-			return current, errors.New("review PR identity changed after ref update")
-		}
-		if current.Head.SHA == expected {
-			return current, nil
+			return current, ErrReviewConflict
 		}
 		var ref struct{ Object struct{ SHA string } }
 		if _, err = api.Call(ctx, "GET", profileAPI+"/git/ref/heads/"+ReviewBranch, nil, &ref); err != nil {
 			return current, err
 		}
 		if ref.Object.SHA != expected {
-			return current, errors.New("review branch was edited after generation; preserve the new ref")
+			return current, ErrReviewConflict
+		}
+		if current.Head.SHA == expected {
+			return current, nil
 		}
 		api.headWaits++
 		if attempt < 9 {
@@ -310,7 +321,7 @@ func (api *Client) awaitPRHead(ctx context.Context, p PR, expected string) (PR, 
 		}
 		p = current
 	}
-	return p, errors.New("accepted review ref has not reached the PR view yet; retry without rewriting")
+	return p, ErrPRHeadPending
 }
 
 func (api *Client) publish(ctx context.Context, p PR, parent string, files map[string]string, existingBranch bool) (PR, error) {
@@ -544,6 +555,7 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 		}
 	}
 	if changed {
+		creatingReview := p.Number == 0
 		p, err = api.publish(ctx, p, parent, map[string]string{"README.md": readme, DataPath: string(Encode(data))}, existingBranch)
 		result.HeadWaits = api.headWaits
 		if api.writtenHead != "" {
@@ -551,8 +563,9 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 			result.Head = api.writtenHead
 			result.PR = p.Number
 			result.URL = p.URL
-			result.Outcome = "review-update-pending"
+			result.Outcome = reviewErrorOutcome(err)
 		}
+		result.ReviewCreated = creatingReview && p.Number > 0
 		if err != nil {
 			return result, err
 		}
@@ -561,6 +574,15 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 	} else if p.Number == 0 && pending {
 		p, err = api.createReview(ctx, parent)
 		result.HeadWaits = api.headWaits
+		result.Head = parent
+		result.Outcome = reviewErrorOutcome(err)
+		if p.Number > 0 {
+			result.PR = p.Number
+			result.URL = p.URL
+			result.Head = parent
+			result.ReviewCreated = true
+			result.Outcome = reviewErrorOutcome(err)
+		}
 		if err != nil {
 			return result, err
 		}

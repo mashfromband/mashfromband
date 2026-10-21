@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -12,6 +13,8 @@ import (
 )
 
 type syncFixture struct {
+	staleViewSHA                                            string
+	checkReads                                              int
 	stalePRReads                                            int
 	editAfterRefWrite                                       bool
 	mainReads, mainChangeAt                                 int
@@ -110,6 +113,9 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 			f.stalePRReads--
 			stale := f.pr
 			stale.Head.SHA = strings.Repeat("b", 40)
+			if f.staleViewSHA != "" {
+				stale.Head.SHA = f.staleViewSHA
+			}
 			sendJSON(w, stale)
 			return
 		}
@@ -246,6 +252,7 @@ func (f *syncFixture) serve(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(200)
 	case strings.Contains(p, "/check-runs"):
+		f.checkReads++
 		sha := strings.Split(strings.TrimPrefix(p, profileAPI+"/commits/"), "/")[0]
 		runs := []map[string]any{}
 		for _, name := range requiredChecks {
@@ -409,13 +416,39 @@ func TestPRHeadPropagationIsBoundedAndReportsAcceptedWrite(t *testing.T) {
 	f.stalePRReads = 100
 	f.client.pause = func(context.Context, time.Duration) error { return nil }
 	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
-	if err == nil || !result.Changed || result.Head != strings.Repeat("e", 40) || result.HeadWaits != 10 || f.commits != 1 || f.merges != 0 {
+	if !errors.Is(err, ErrPRHeadPending) || result.Outcome != "review-head-pending" || !result.Changed || result.Head != strings.Repeat("e", 40) || result.HeadWaits != 10 || f.commits != 1 || f.merges != 0 {
 		t.Fatalf("unbounded or misreported PR propagation: %#v %v", result, err)
 	}
 	f.stalePRReads = 0
 	again, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
 	if err != nil || again.Changed || f.commits != 1 {
 		t.Fatalf("recovery duplicated a write: %#v %v", again, err)
+	}
+}
+
+func TestOrphanCreatedPRPendingKeepsCreationIdentity(t *testing.T) {
+	f := newSyncFixture(t, false)
+	f.branchExists = true
+	f.branchSHA = strings.Repeat("b", 40)
+	f.stalePRReads = 100
+	f.staleViewSHA = strings.Repeat("a", 40)
+	f.client.pause = func(context.Context, time.Duration) error { return nil }
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if !errors.Is(err, ErrPRHeadPending) || result.Outcome != "review-head-pending" || result.PR != 31 || result.URL == "" || result.Head != strings.Repeat("b", 40) || !result.ReviewCreated || result.Changed || f.created != 1 || f.commits != 0 {
+		t.Fatalf("created pending review identity lost: %#v %v", result, err)
+	}
+}
+
+func TestMatchingPRViewCannotHideAChangedLiveRef(t *testing.T) {
+	f := newSyncFixture(t, true)
+	f.fresh = true
+	f.editAfterRefWrite = true
+	f.stalePRReads = 1
+	f.staleViewSHA = strings.Repeat("e", 40)
+	f.client.pause = func(context.Context, time.Duration) error { return nil }
+	result, err := Sync(context.Background(), fixtureConfig(), f.client, time.Now(), 0)
+	if !errors.Is(err, ErrReviewConflict) || result.Outcome != "review-edit-conflict" || f.checkReads != 0 || f.merges != 0 || f.data.Entries[0].Title != "late editorial change" {
+		t.Fatalf("matching PR view hid an editor: %#v %v", result, err)
 	}
 }
 
