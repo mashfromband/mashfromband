@@ -116,7 +116,7 @@ Public GitHub cards cannot read private repository activity, so this section mir
 
 | Date | Public development | Technology |
 | --- | --- | --- |
-| 2026-10-11 | [暗号化した共有項目と添付をクライアントへ接続](https://github.com/AutoDevJapan/PassShare/pull/711) — デスクトップ・モバイル・ブラウザ拡張で使う、暗号化した項目と添付の共通処理を接続しました。 | Rust |
+| 2026-10-11 | [暗号化した共有項目と添付をクライアントへ接続](https://github.com/AutoDevJapan/PassShare/pull/711) — 暗号化した項目と添付の共通処理を、デスクトップ・モバイル・ブラウザ拡張へ接続しました。 | Rust |
 | 2026-10-11 | [translate recovery and align support terms](https://github.com/AutoDevJapan/PassShare/pull/709) — ロシア語の復旧フォームに32件の英語が残っていました。説明とエラーを翻訳し、ログイン復旧との分離、コードの別保管、応答不明時の同じ保存の確認を維持しました。 | Rust, TypeScript |
 | 2026-10-11 | [support recipient attachment snapshots](https://github.com/AutoDevJapan/PassShare/pull/708) — 共有受信者が添付を読み取るとき、Rust SDKに対応する状態取得と項目取得がありませんでした。型付きの読取を追加し、独立して保持した鍵世代と項目contextを照合します。正式受入も実SDK経由へ接続しました。ロシア語の復旧説明を翻訳しました。 | Rust, TypeScript |
 | 2026-10-10 | [共有相手の鍵確認と実添付の暗号化を正式APIへ接続](https://github.com/AutoDevJapan/PassShare/pull/701) — 暗号化した項目と実添付を同じ取引で保存するAPI、SDK、WASM接続と、相手の公開コードを独立して照合するWeb画面を追加します。添付の名前と任意バイトは端末で暗号化し、版・鍵世代・認証済み項目参照と保存状態を照合します。現在の参加状態と相手の鍵を共有直前にも確認します。 | Rust, TypeScript |
