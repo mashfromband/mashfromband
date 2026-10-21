@@ -14,6 +14,19 @@ const Profile = "mashfromband/mashfromband"
 const ReviewBranch = "automation/public-activity"
 const profileAPI = "/repos/" + Profile
 
+var ErrReviewConflict = errors.New("review branch or PR changed during generation")
+var ErrPRHeadPending = errors.New("accepted review ref has not reached the PR view yet")
+
+func reviewErrorOutcome(err error) string {
+	if errors.Is(err, ErrReviewConflict) {
+		return "review-edit-conflict"
+	}
+	if errors.Is(err, ErrPRHeadPending) {
+		return "review-head-pending"
+	}
+	return "review-update-unconfirmed"
+}
+
 type PR struct {
 	Number   int        `json:"number"`
 	URL      string     `json:"html_url"`
@@ -41,13 +54,16 @@ func (p PR) labelNames() []string {
 }
 
 type SyncResult struct {
-	Outcome   string `json:"outcome"`
-	PR        int    `json:"pr,omitempty"`
-	URL       string `json:"url,omitempty"`
-	Head      string `json:"head,omitempty"`
-	Changed   bool   `json:"changed"`
-	Published bool   `json:"published"`
-	Entries   int    `json:"entries"`
+	Outcome         string `json:"outcome"`
+	PR              int    `json:"pr,omitempty"`
+	URL             string `json:"url,omitempty"`
+	Head            string `json:"head,omitempty"`
+	Changed         bool   `json:"changed"`
+	Published       bool   `json:"published"`
+	Entries         int    `json:"entries"`
+	HeadWaits       int    `json:"head_propagation_waits,omitempty"`
+	ReviewCreated   bool   `json:"review_created,omitempty"`
+	UpdateAttempted bool   `json:"update_attempted,omitempty"`
 }
 type remoteInput struct {
 	Readme   []byte
@@ -270,10 +286,43 @@ func (api *Client) createReview(ctx context.Context, sha string) (PR, error) {
 	if err != nil {
 		return p, err
 	}
-	if !validPR(p) || p.Head.SHA != sha {
-		return p, errors.New("created review PR did not match expected head")
+	if !validPR(p) {
+		return p, errors.New("created review PR identity differs")
 	}
-	return p, nil
+	return api.awaitPRHead(ctx, p, sha)
+}
+
+// The git ref update is authoritative, but GitHub's PR read model can lag it.
+// Wait for that view only while the live ref still equals our accepted write.
+// A different ref is an editor's change: stop without retrying any write.
+func (api *Client) awaitPRHead(ctx context.Context, p PR, expected string) (PR, error) {
+	for attempt := 0; attempt < 10; attempt++ {
+		current, err := api.getPR(ctx, p.Number)
+		if err != nil {
+			return p, err
+		}
+		if !validPR(current) {
+			return current, ErrReviewConflict
+		}
+		var ref struct{ Object struct{ SHA string } }
+		if _, err = api.Call(ctx, "GET", profileAPI+"/git/ref/heads/"+ReviewBranch, nil, &ref); err != nil {
+			return current, err
+		}
+		if ref.Object.SHA != expected {
+			return current, ErrReviewConflict
+		}
+		if current.Head.SHA == expected {
+			return current, nil
+		}
+		api.headWaits++
+		if attempt < 9 {
+			if err = api.pause(ctx, time.Second); err != nil {
+				return current, err
+			}
+		}
+		p = current
+	}
+	return p, ErrPRHeadPending
 }
 
 func (api *Client) publish(ctx context.Context, p PR, parent string, files map[string]string, existingBranch bool) (PR, error) {
@@ -281,6 +330,7 @@ func (api *Client) publish(ctx context.Context, p PR, parent string, files map[s
 	if err != nil {
 		return p, err
 	}
+	api.attemptedHead = sha
 	if !existingBranch {
 		if _, err = api.Call(ctx, "POST", profileAPI+"/git/refs", map[string]string{"ref": "refs/heads/" + ReviewBranch, "sha": sha}, nil); err != nil {
 			return p, err
@@ -290,19 +340,21 @@ func (api *Client) publish(ctx context.Context, p PR, parent string, files map[s
 		_, err = api.Call(ctx, "PATCH", profileAPI+"/git/refs/heads/"+ReviewBranch, map[string]any{"sha": sha, "force": false}, nil)
 	}
 	if err != nil {
-		return p, err
+		// An error can mean only the response was lost. Reconcile once against
+		// the authoritative ref; never repeat the create/update request.
+		var ref struct{ Object struct{ SHA string } }
+		if _, readErr := api.Call(ctx, "GET", profileAPI+"/git/ref/heads/"+ReviewBranch, nil, &ref); readErr != nil {
+			return p, fmt.Errorf("ref update outcome is unconfirmed: %w", err)
+		}
+		if ref.Object.SHA != sha {
+			return p, ErrReviewConflict
+		}
 	}
+	api.writtenHead = sha
 	if p.Number == 0 {
 		return api.createReview(ctx, sha)
 	}
-	p, err = api.getPR(ctx, p.Number)
-	if err != nil {
-		return p, err
-	}
-	if !validPR(p) || p.Head.SHA != sha {
-		return p, errors.New("published review PR did not match expected head")
-	}
-	return p, nil
+	return api.awaitPRHead(ctx, p, sha)
 }
 
 type checkRun struct {
@@ -403,6 +455,9 @@ func (api *Client) validateHead(ctx context.Context, p PR) error {
 // survive; concurrent edits are rejected by a non-force reference update.
 func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDelay time.Duration) (SyncResult, error) {
 	result := SyncResult{Outcome: "unchanged"}
+	api.headWaits = 0
+	api.writtenHead = ""
+	api.attemptedHead = ""
 	var meta publicRepo
 	if _, err := api.Call(ctx, "GET", profileAPI, nil, &meta); err != nil {
 		return result, err
@@ -511,7 +566,18 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 		}
 	}
 	if changed {
+		creatingReview := p.Number == 0
 		p, err = api.publish(ctx, p, parent, map[string]string{"README.md": readme, DataPath: string(Encode(data))}, existingBranch)
+		result.HeadWaits = api.headWaits
+		if api.attemptedHead != "" {
+			result.UpdateAttempted = true
+			result.Changed = api.writtenHead != ""
+			result.Head = api.attemptedHead
+			result.PR = p.Number
+			result.URL = p.URL
+			result.Outcome = reviewErrorOutcome(err)
+		}
+		result.ReviewCreated = creatingReview && p.Number > 0
 		if err != nil {
 			return result, err
 		}
@@ -519,6 +585,16 @@ func Sync(ctx context.Context, cfg Config, api *Client, now time.Time, reviewDel
 		result.Outcome = "review-updated"
 	} else if p.Number == 0 && pending {
 		p, err = api.createReview(ctx, parent)
+		result.HeadWaits = api.headWaits
+		result.Head = parent
+		result.Outcome = reviewErrorOutcome(err)
+		if p.Number > 0 {
+			result.PR = p.Number
+			result.URL = p.URL
+			result.Head = parent
+			result.ReviewCreated = true
+			result.Outcome = reviewErrorOutcome(err)
+		}
 		if err != nil {
 			return result, err
 		}
