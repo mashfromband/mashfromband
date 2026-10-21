@@ -1,0 +1,30 @@
+{
+  "repositories": [
+    {
+      "name": "AutoDevJapan/PassShare",
+      "id": 1131498455,
+      "technologies": ["rust", "typescript"],
+      "include_titles": ["(?i)^(feat|fix|perf)(\\([^)]*\\))?:", "暗号化(項目|添付|Web)|共有(相手|鍵)|パスワード(ボックス|復旧)|無操作でロック|添付.*(取得|保存)"]
+    },
+    {
+      "name": "AutoDevJapan/KaraokeMaker",
+      "id": 1403886226,
+      "technologies": ["rust"],
+      "include_titles": ["(?i)^(feat|fix|perf)(\\([^)]*\\))?:", "(MP3|音源|字幕|歌詞|分離|4K).*(改善|拒否|修復|選べる|出力)"]
+    },
+    {
+      "name": "AutoDevJapan/civ6-banseiki",
+      "id": 1392152644,
+      "technologies": ["rust", "lua"],
+      "include_titles": ["(?i)^(feat|fix|perf)(\\([^)]*\\))?:", "同盟.*停止を防ぐ|マルチプレイ.*(成長|家名|宗教)|作品.*(移動|継承|回収)|日本マップ.*(分担|開始)|万世紀.*(成長|保存|二人)"]
+    }
+  ],
+  "technologies": [
+    {"id": "rust", "name": "Rust"},
+    {"id": "go", "name": "Go"},
+    {"id": "typescript", "name": "TypeScript"},
+    {"id": "lua", "name": "Lua"}
+  ],
+  "exclude_titles": ["(?i)\\b(acceptance|workflow|ci|doctest|clippy|nextest|todo|owner|internal|fixture|diagnostic)\\b", "オーナー|本人|受領|未送信|未公開|承認|顧客|クライアント案件|社内|運用|配備|文書|手順|検査|検証|診断|監督|資格|定期|体制|料金|契約|請求"],
+  "readme_limit": 6
+}

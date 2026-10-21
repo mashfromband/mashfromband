@@ -1,6 +1,7 @@
 name: Profile README Quality
 
 on:
+  workflow_dispatch:
   # Run on every pull request and push to main (no path filter) so the
   # "Markdown links" check always reports a status and can serve as a required
   # status check without deadlocking PRs that do not touch README.md.

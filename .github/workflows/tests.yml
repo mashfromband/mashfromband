@@ -1,6 +1,7 @@
 name: Tests
 
 on:
+  workflow_dispatch:
   # Run on every pull request and push to main (no path filter) so this check
   # always reports a status and can serve as a required status check without
   # deadlocking PRs that do not touch scripts/ or tests/.
@@ -27,3 +28,22 @@ jobs:
 
       - name: Run unit tests
         run: python -m unittest discover -s tests
+
+  activity-tests:
+    name: Go activity tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Test collector and review synchronization
+        run: go test ./...
+      - name: Vet Go
+        run: go vet ./...
+      - name: Validate public activity data and README
+        run: go run ./cmd/profile-activity -mode check

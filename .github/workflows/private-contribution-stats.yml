@@ -2,6 +2,16 @@ name: All Activity Signals
 
 on:
   workflow_dispatch:
+    inputs:
+      review_hours:
+        description: "Public activity grace period: 168 normally; 0 for explicit acceptance"
+        type: choice
+        options: ["168", "0"]
+        default: "168"
+      public_only:
+        description: "Only refresh public development activity"
+        type: boolean
+        default: false
   schedule:
     # Daily keeps the profile current while staying lightweight for a public profile repository.
     - cron: "17 3 * * *"
@@ -10,13 +20,18 @@ permissions:
   contents: write
   pull-requests: write
 
-env:
-  PROFILE_STATS_TOKEN: ${{ secrets.PROFILE_STATS_TOKEN }}
+concurrency:
+  group: profile-daily-refresh
+  cancel-in-progress: false
 
 jobs:
   generate:
     name: Generate aggregate activity stats
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.public_only }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PROFILE_STATS_TOKEN: ${{ secrets.PROFILE_STATS_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -60,3 +75,29 @@ jobs:
           assignees: mashfromband
           add-paths: |
             assets/private-contributions.svg
+
+  public-activity:
+    name: Refresh public development activity
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      GITHUB_EVENT_NAME: ${{ github.event_name }}
+      REVIEW_HOURS: ${{ github.event_name == 'workflow_dispatch' && inputs.review_hours || '168' }}
+    steps:
+      - name: Checkout trusted default-branch collector
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Collect, preserve edits, check and publish when due
+        run: go run ./cmd/profile-activity -mode sync -review-hours "$REVIEW_HOURS"
