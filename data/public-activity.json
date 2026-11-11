@@ -1,7 +1,37 @@
 {
   "version": 1,
-  "updated": "2026-10-21T05:05:10.057038818Z",
+  "updated": "2026-11-11T10:55:18.286775783Z",
   "entries": [
+    {
+      "id": "github:1403886226:pull:47",
+      "kind": "pull",
+      "repository": "AutoDevJapan/KaraokeMaker",
+      "repository_id": 1403886226,
+      "number": 47,
+      "url": "https://github.com/AutoDevJapan/KaraokeMaker/pull/47",
+      "date": "2026-11-11T10:23:35Z",
+      "title": "歌詞認識で別行の重複と不正なトークン時刻を拒否する",
+      "summary": "歌詞認識で別行の重複と不正なトークン時刻を拒否する",
+      "technologies": [
+        "rust"
+      ],
+      "tech_source": "repository"
+    },
+    {
+      "id": "github:1403886226:pull:40",
+      "kind": "pull",
+      "repository": "AutoDevJapan/KaraokeMaker",
+      "repository_id": 1403886226,
+      "number": 40,
+      "url": "https://github.com/AutoDevJapan/KaraokeMaker/pull/40",
+      "date": "2026-11-10T01:07:01Z",
+      "title": "字幕再出力の分離方法とASR設定を実処理に合わせる",
+      "summary": "歌詞だけを修正した結果に、実行していない既定の分離モデルとASR設定が保存されていました。既存の伴奏を再利用する際は原結果の分離方法を引き継ぎ、ASRは無効として保存します。",
+      "technologies": [
+        "rust"
+      ],
+      "tech_source": "repository"
+    },
     {
       "id": "github:1131498455:pull:711",
       "kind": "pull",
@@ -1695,5 +1725,5 @@
       "tech_source": "repository"
     }
   ],
-  "readme_sha256": "55d33c579662f105b67e615358752464e14a711d7abbc7189a2778248586c2bc"
+  "readme_sha256": "0624852648c51c20de978a4400206ae7981566e3a8bf902d92b98ffb9037c071"
 }
